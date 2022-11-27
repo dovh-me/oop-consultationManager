@@ -1,24 +1,15 @@
 package util;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Scanner;
 
 public class InputPrompter {
-    static Scanner scanner = new Scanner(System.in);
+    private static final Scanner SCANNER = new Scanner(System.in);
 
-    public static String promptString(String m) {
-        String input = "";
-        try {
-            ConsoleLog.log(m, true);
-            input = InputPrompter.scanner.nextLine();
-        } catch (Exception error) {
-            ConsoleLog.error("There was an error capturing user input");
-        }
-        return input.trim();
+    public static String promptString(String m) throws NoSuchElementException {
+        ConsoleLog.log(m, true);
+        return InputPrompter.SCANNER.nextLine().trim();
     }
 
     public static String promptString(String m, List<String> allowed) {
@@ -32,6 +23,16 @@ public class InputPrompter {
         return input;
     }
 
+    public static String promptValidatedString(String promptMessage, Validator<String> v) {
+        String input;
+        while(true) {
+            input =  InputPrompter.promptString(promptMessage);
+            if(v.validate(input)) break;
+            ConsoleLog.error("Invalid input. Please enter a valid input to continue.");
+        }
+
+        return input;
+    }
 
     public static int promptInt(String m) {
         try {

@@ -1,9 +1,8 @@
-package models;
+package gui.models;
 
 import java.io.Serializable;
-import java.text.DateFormat;
-import java.text.ParseException;
 import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 
 public class Person implements Serializable {
     private String name;
@@ -11,10 +10,7 @@ public class Person implements Serializable {
     private LocalDate dob;
     private String contactNo;
 
-    public Person() {
-    }
-
-    public Person(String name, String surname, String dob, String contactNo) {
+    public Person(String name, String surname, String dob, String contactNo) throws DateTimeParseException {
         this.name = name;
         this.surname = surname;
         this.contactNo = contactNo;

@@ -1,10 +1,13 @@
-import models.Doctor;
+import gui.models.Doctor;
+
+import java.time.LocalDateTime;
 
 public interface SkinConsultationManager {
-    void addDoctor(Doctor d);
+    void addDoctor();
     void updateDoctor();
-    void removeDoctor(String medLicense);
-    boolean getDoctorAvailability();
+    void removeDoctor();
+    boolean getDoctorAvailability(Doctor doctor, LocalDateTime ldt);
+    Doctor getAvailableDoctor(String specialization, String dateTime);
     void viewDoctors();
 
     void addConsultation();

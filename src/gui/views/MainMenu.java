@@ -1,4 +1,4 @@
-package views;
+package gui.views;
 
 public class MainMenu {
 
