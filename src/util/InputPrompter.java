@@ -12,17 +12,6 @@ public class InputPrompter {
         return InputPrompter.SCANNER.nextLine().trim();
     }
 
-    public static String promptString(String m, List<String> allowed) {
-        String input;
-        while(true) {
-            input =  InputPrompter.promptString(m).toUpperCase();
-            if(allowed.contains(input)) break;
-            ConsoleLog.error("Invalid input. Please enter a valid input to continue.");
-        }
-
-        return input;
-    }
-
     public static String promptValidatedString(String promptMessage, Validator<String> v) {
         String input;
         while(true) {

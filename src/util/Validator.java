@@ -5,8 +5,11 @@ import constants.RegExp;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.Arrays;
+import java.util.List;
 
 public abstract class Validator<T> {
 
@@ -59,6 +62,35 @@ public abstract class Validator<T> {
 //            return input.matches(RegExp.RegExp_MEDICAL_LICENSE_NO);
             return input.matches("^[a-z]\\d{6}$"
             );
+        }
+    };
+
+    public static final Validator<String> PATIENT_UID = new Validator<String>() {
+        @Override
+        public boolean validate(String input) {
+            return true;
+        }
+    };
+
+    public static final Validator<String> CONSULTATION_DATE = new Validator<String>() {
+        @Override
+        public boolean validate(String input) {
+            if(!Validator.DATE_STRING.validate(input)) return false;
+            if( LocalDateTime.now().compareTo(LocalDateTime.of(LocalDate.parse(input,
+                    Formats.DATE_FORMAT), LocalTime.of(0,0))) > 0){
+                ConsoleLog.error("Consultation can only be booked for future " +
+                        "dates");
+                return false;
+            };
+            return true;
+        }
+    };
+
+    public static final Validator<String> YES_NO_INPUT = new Validator<String>() {
+        @Override
+        public boolean validate(String input) {
+            List<String> allowed = Arrays.asList("Y", "N");
+            return allowed.contains(input.toUpperCase());
         }
     };
 

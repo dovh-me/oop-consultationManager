@@ -1,10 +1,10 @@
 package gui.models;
 
 import exceptions.DailyConsultationsFullException;
-import util.ConsoleLog;
 
 import java.io.Serializable;
 import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
@@ -15,7 +15,7 @@ import java.util.stream.Stream;
 public class Doctor extends Person implements Serializable {
     private String medicalLicenseNo;
     private String specialization;
-    private TreeSet<Consultation> consultations;
+    private TreeSet<Consultation> consultations = new TreeSet<>();
     private int patientsPerDay = 5;
     private ArrayList<DayOfWeek> availableDays = new ArrayList<>(Arrays.asList(DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY,DayOfWeek.SATURDAY));
     private LocalTime consultationStart = LocalTime.of(17,0);
@@ -31,17 +31,17 @@ public class Doctor extends Person implements Serializable {
     }
 
     public void addConsultation(Consultation c) throws DailyConsultationsFullException {
-        List<Consultation> consultationList = this.findConsultationsByDate(c.getDateTime());
+        List<Consultation> consultationList = this.findConsultationsByDate(c.getDate());
 
         if(consultationList.size() >= this.getPatientsPerDay()) throw new DailyConsultationsFullException(this.getPatientsPerDay());
         this.consultations.remove(c);
         this.consultations.add(c);
     }
 
-    public List<Consultation> findConsultationsByDate(LocalDateTime dateTime) {
+    public List<Consultation> findConsultationsByDate(LocalDate date) {
         Stream<Consultation> consultationStream =  this.consultations.stream().filter(consultation -> {
-            LocalDateTime dt = consultation.getDateTime();
-            return dt.getYear() == dateTime.getDayOfYear() && dt.getMonth() == dateTime.getMonth() && dt.getDayOfMonth() == dateTime.getDayOfMonth();
+            LocalDate dt = consultation.getDate();
+            return dt.getYear() == date.getYear() && dt.getMonth() == date.getMonth() && dt.getDayOfMonth() == date.getDayOfMonth();
         });
 
         return consultationStream.collect(Collectors.toList());
