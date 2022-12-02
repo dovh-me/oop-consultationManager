@@ -2,47 +2,59 @@ package gui.components;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.Stack;
+import java.util.ArrayList;
 
 public class ApplicationFrame extends JFrame {
-    private Stack<JPanel> backNavigation = new Stack<>();
-    private JPanel active;
-    private JPanel mainMenuPanel;
-    private JPanel doctorsMainPanel;
-    private JPanel addDoctorPanel;
-    private JPanel viewDoctorPanel;
-    private JPanel editDoctorPanel;
-    private JPanel consultationsMainPanel;
-    private JPanel addConsultation;
-    private JPanel viewConsultations;
+    private final JLabel applicationTitle = new JLabel();
+    private final JButton backNavigationButton = new JButton();
+    private final JPanel headerPanel =  new JPanel();
+    private final JLayeredPane contentPanel = new JLayeredPane();
+    private final Page defaultActivePage;
+    private Page activePage;
+    private ArrayList<Page> pages;
 
-    public ApplicationFrame(JPanel mainMenuPanel, JPanel doctorsMainPanel, JPanel addDoctorPanel, JPanel viewDoctorPanel, JPanel editDoctorPanel, JPanel consultationsMainPanel, JPanel addConsultation, JPanel viewConsultations) throws HeadlessException {
-        this.mainMenuPanel = mainMenuPanel;
-        this.doctorsMainPanel = doctorsMainPanel;
-        this.addDoctorPanel = addDoctorPanel;
-        this.viewDoctorPanel = viewDoctorPanel;
-        this.editDoctorPanel = editDoctorPanel;
-        this.consultationsMainPanel = consultationsMainPanel;
-        this.addConsultation = addConsultation;
-        this.viewConsultations = viewConsultations;
-
-        this.active = this.mainMenuPanel;
+    public ApplicationFrame(String frameTitle, Page activePage,
+                            Page... pages) throws HeadlessException {
+        this.defaultActivePage = activePage;
+        this.activePage = this.defaultActivePage;
+        this.setLayout(new BorderLayout());
+        this.setTitle(frameTitle);
+        this.initHeaderPanel();
+        this.initContentPanel(pages);
     }
 
-    public void start() {
-        ApplicationFrame af = new ApplicationFrame(
-                new TwoButtonMainPanel(
-                        new JButton("Doctors"), new JButton("Consultations"), new JLabel("Main Menu")
-                ),
-                new TwoButtonMainPanel(
-                        new JButton("Add Doctor"), new JButton("View Doctors"), new JLabel("Doctors")
-                ),
-                new JPanel(),
-                new JPanel(),
-                new JPanel(),
-                new JPanel(),
-                new JPanel(),
-                new JPanel()
-                );
+    private void initContentPanel(Page[] pages) {
+        for (Page page : pages) {
+            this.contentPanel.add(page);
+        }
+        this.add(contentPanel, BorderLayout.CENTER);
+    }
+
+    private void initHeaderPanel() {
+        backNavigationButton.addActionListener(e -> activePage.navigateBack());
+
+        headerPanel.setLayout(new BorderLayout());
+        headerPanel.add(applicationTitle, BorderLayout.CENTER);
+        headerPanel.add(backNavigationButton);
+    }
+
+    public void setApplicationTitle(String title) {
+        applicationTitle.setText(title);
+    }
+
+    public ArrayList<Page> getPages() {
+        return pages;
+    }
+
+    public Page getDefaultActivePage() {
+        return defaultActivePage;
+    }
+
+    public Page getActivePage() {
+        return activePage;
+    }
+
+    public void setActivePage(Page activePage) {
+        this.activePage = activePage;
     }
 }

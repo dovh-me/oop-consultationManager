@@ -6,13 +6,16 @@ import java.awt.*;
 
 public class TwoButtonMainPanel extends JPanel{
     JButton leftButton;
+    JButton centerButton;
     JButton rightButton;
     JLabel titleLabel;
     JPanel titlePanel = new JPanel();
     JPanel centerPanel = new JPanel();
 
-    public TwoButtonMainPanel(JButton leftButton, JButton rightButton, JLabel titleLabel) {
+    public TwoButtonMainPanel(JButton leftButton,JButton centerButton, JButton rightButton,
+                              JLabel titleLabel) {
         this.leftButton = leftButton;
+        this.centerButton = centerButton;
         this.rightButton = rightButton;
         this.titleLabel = titleLabel;
 
