@@ -1,6 +1,7 @@
 package gui.models;
 
 import exceptions.DailyConsultationsFullException;
+import gui.components.TabularModel;
 
 import java.io.Serializable;
 import java.time.DayOfWeek;
@@ -12,7 +13,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class Doctor extends Person implements Serializable {
+public class Doctor extends Person implements Serializable, TabularModel {
+    public static String[] tableColumns = new String[] {"Medical License No." ,"Full Name", "Specialisation", "Contact No."};
     private String medicalLicenseNo;
     private String specialization;
     private TreeSet<Consultation> consultations = new TreeSet<>();
@@ -101,5 +103,10 @@ public class Doctor extends Person implements Serializable {
 
     public void setConsultationStart(LocalTime consultationStart) {
         this.consultationStart = consultationStart;
+    }
+
+    @Override
+    public String[] getTableRowData() {
+        return new String[] {this.getMedicalLicenseNo() ,this.getName() + " " + this.getSurname(), this.getSpecialization(), this.getContactNo()};
     }
 }

@@ -1,10 +1,13 @@
 package gui.models;
 
+import constants.Formats;
+import gui.components.TabularModel;
+
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 
-public class Person implements Serializable {
+public class Person implements Serializable, TabularModel {
     private String name;
     private String surname;
     private LocalDate dob;
@@ -47,5 +50,15 @@ public class Person implements Serializable {
 
     public void setContactNo(String contactNo) {
         this.contactNo = contactNo;
+    }
+
+    @Override
+    public String[] getTableColumnNames() {
+        return new String[]{"Name", "Date of Birth", "Contact No."};
+    }
+
+    @Override
+    public String[] getTableRowData() {
+        return new String[]{this.name + this.surname, this.dob.format(Formats.DATE_FORMAT), this.contactNo};
     }
 }

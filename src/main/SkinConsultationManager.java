@@ -1,3 +1,5 @@
+package main;
+
 import gui.models.Doctor;
 
 import java.time.LocalDate;

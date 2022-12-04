@@ -1,6 +1,4 @@
-package gui.components;
-
-import gui.pages.Application;
+package gui.pages;
 
 import javax.swing.*;
 
@@ -19,14 +17,22 @@ public abstract class Page extends JPanel {
             this.prevPage.setVisible(true);
 
             // Set the active Page in the application object to the prevPage of the current page
-            Application.af.setActivePage(
-                    this.prevPage != Application.af.getDefaultActivePage()?
+            Application.app.af.setActivePage(
+                    this.prevPage != Application.app.af.getDefaultActivePage()?
                     this.prevPage: null);
         }
     }
 
     public void navigateTo(Page prevPage) {
         this.prevPage = prevPage;
-        Application.af.setActivePage(this);
+        Application.app.af.setActivePage(this);
+    }
+
+    public Page getPrevPage() {
+        return prevPage;
+    }
+
+    public void setPrevPage(Page prevPage) {
+        this.prevPage = prevPage;
     }
 }

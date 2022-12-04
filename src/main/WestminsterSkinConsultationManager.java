@@ -1,8 +1,11 @@
+package main;
+
 import constants.Formats;
 import exceptions.DailyConsultationsFullException;
 import gui.models.Consultation;
 import gui.models.Doctor;
 import gui.models.Patient;
+import gui.pages.Application;
 import util.*;
 
 import java.io.*;
@@ -299,7 +302,8 @@ public class WestminsterSkinConsultationManager implements SkinConsultationManag
     }
 
     public void launchGUI() {
-
+        Application.start(this);
+        System.out.println("GUI application started!!");
     }
 
     public void saveToFile() {
@@ -327,7 +331,7 @@ public class WestminsterSkinConsultationManager implements SkinConsultationManag
         } catch (IOException i) {
             i.printStackTrace();
         } catch (ClassNotFoundException c) {
-            System.out.println("WestminsterSkinConsultationManager class not found");
+            System.out.println("main.WestminsterSkinConsultationManager class not found");
             c.printStackTrace();
         }
     }

@@ -6,7 +6,8 @@ public class ConsoleLog {
     }
 
     public static void log(String m, boolean isSameLine) {
-        System.out.print(m);
+        if(isSameLine) System.out.print(m);
+        else log(m);
     }
 
     public static void logWithColors(String color, String m) {

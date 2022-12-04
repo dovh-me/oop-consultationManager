@@ -1,6 +1,7 @@
 package gui.models;
 
 import constants.Formats;
+import gui.components.TabularModel;
 
 import java.io.Serializable;
 import java.time.LocalDate;
@@ -9,7 +10,8 @@ import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
 import java.util.List;
 
-public class Consultation implements Serializable, Comparable<Consultation> {
+public class Consultation implements Serializable, Comparable<Consultation>, TabularModel {
+    public static String[] tableColumns = new String[]{"Date Time","Patient UID","Patient Name", "Doctor Name", "Cost"};
     LocalDate date;
     private float cost;
     private String notes;
@@ -80,4 +82,13 @@ public class Consultation implements Serializable, Comparable<Consultation> {
         return this.getDate().compareTo(o.getDate());
     }
 
+    @Override
+    public String[] getTableColumnNames() {
+        return new String[]{"Date Time","Patient UID","Patient Name", "Doctor Name", "Cost"};
+    }
+
+    @Override
+    public String[] getTableRowData() {
+        return new String[]{date.format(Formats.DATE_FORMAT), patient.getUid(),patient.getName() + patient.getSurname(), doctor.getName() + doctor.getSurname(),Float.toString(cost) };
+    }
 }
