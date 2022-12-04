@@ -21,6 +21,7 @@ public class TextFieldInputGroup extends JPanel implements InputGroup<String> {
 
     public TextFieldInputGroup(String title, GUIValidator<KeyEvent>[] onChangeValidators, GUIValidator<String>[] finalValidators) {
         this.setLayout(new GridLayout(1,2));
+        this.finalValidators = finalValidators;
 
         this.inputLabel = new JLabel(title);
 
@@ -48,7 +49,7 @@ public class TextFieldInputGroup extends JPanel implements InputGroup<String> {
                 for(GUIValidator<KeyEvent> validator: onChangeValidators) {
                     isValid = validator.validate(e);
 
-                    if(!isValid) {
+                    if(!isValid && validator.getValidationMessage() != null) {
                         inputValidationLabel.setText(validator.getValidationMessage());
                         inputValidationLabel.setVisible(true);
                         e.consume();
@@ -67,7 +68,7 @@ public class TextFieldInputGroup extends JPanel implements InputGroup<String> {
         for(GUIValidator<String> validator: this.finalValidators) {
             isValid = validator.validate(this.getInput());
 
-            if(!isValid) {
+            if(!isValid  && validator.getValidationMessage() != null) {
                 inputValidationLabel.setText(validator.getValidationMessage());
                 inputValidationLabel.setVisible(true);
                 break;
