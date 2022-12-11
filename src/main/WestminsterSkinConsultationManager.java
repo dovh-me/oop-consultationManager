@@ -1,19 +1,18 @@
 package main;
 
 import constants.Formats;
-import exceptions.DailyConsultationsFullException;
+import exceptions.IllegalConsultationException;
 import gui.models.Consultation;
 import gui.models.Doctor;
 import gui.models.Patient;
-import gui.pages.Application;
 import util.*;
 
 import java.io.*;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class WestminsterSkinConsultationManager implements SkinConsultationManager, Serializable {
-
     private ArrayList<Doctor> doctors;
     private ArrayList<Consultation> consultations;
 
@@ -137,14 +136,12 @@ public class WestminsterSkinConsultationManager implements SkinConsultationManag
     }
 
     @Override
-    public boolean getDoctorAvailability(Doctor doctor, LocalDate ldt) {
-        return doctor.getAvailableDays().contains(ldt.getDayOfWeek())
-                && doctor.findConsultationsByDate(ldt).size() < doctor.getPatientsPerDay();
-    }
-
-    @Override
-    public Doctor getAvailableDoctor(String specialization, String dateTime) {
-        return null;
+    public Doctor getAvailableDoctor(String specialization, LocalDateTime dateTime) {
+        List<Doctor> availableDoctors =  this.doctors.stream().filter(doctor -> doctor.getSpecialization().equals(specialization) && doctor.getAvailability(dateTime)).collect(Collectors.toList());
+        if(availableDoctors.isEmpty()) return null;
+        // Generate a random integer to select the doctor
+        int randomIndex = (int) Math.round(Math.random() * availableDoctors.size() -1);
+        return availableDoctors.get(randomIndex);
     }
 
     @Override
@@ -176,7 +173,7 @@ public class WestminsterSkinConsultationManager implements SkinConsultationManag
             String[] pData = this.promptPerson();
             String dateTime = InputPrompter.promptValidatedString(
                     String.format("Enter the date of the consultation (%s): ",
-                            "yyyy-MM-dd"), Validator.CONSULTATION_DATE);
+                            "yyyy-MM-dd"), Validator.CONSULTATION_DATE_TIME);
             String notes = InputPrompter.promptString("Enter notes (without line breaks): ");
 
             ConsoleLog.info("Doctor Information");
@@ -193,12 +190,13 @@ public class WestminsterSkinConsultationManager implements SkinConsultationManag
 
             Doctor doctor = findDoctor(medLicense).get();
 
-            if (!this.getDoctorAvailability(doctor,
-                    LocalDate.parse(dateTime, Formats.DATE_FORMAT))) {
+            // TODO: handle duration - currently setting 0
+            LocalDateTime consultationDateTime = LocalDateTime.parse(dateTime, Formats.DATE_TIME_FORMATTER);
+            if (!doctor.getAvailability(consultationDateTime)) {
+
                 ConsoleLog.warning("Doctor you are trying to book is not available on the " +
                         "relevant date... a different doctor will be recommended by the system.");
-                doctor = getAvailableDoctor(doctor.getSpecialization(), dateTime);
-
+                doctor  = getAvailableDoctor(doctor.getSpecialization(), consultationDateTime);
                 // TODO: make the program run if no doctors available for the given date??
                 //  Doesn't seem to be practical. Therefore, exiting add consultation for now.
                 if (doctor == null) {
@@ -230,7 +228,7 @@ public class WestminsterSkinConsultationManager implements SkinConsultationManag
                     p.getUid(), c.getApproximateDateTime()
             ));
 
-        } catch (DailyConsultationsFullException e) {
+        } catch (IllegalConsultationException e) {
             ConsoleLog.error("Illegal operation: No more consultations allowed for the doctor being booked. Please select a different doctor");
         } catch (NoSuchElementException e) {
             ConsoleLog.error("There was an error capturing input");
@@ -302,7 +300,7 @@ public class WestminsterSkinConsultationManager implements SkinConsultationManag
     }
 
     public void launchGUI() {
-        Application.start(this);
+        GUIApplication.start(this);
         System.out.println("GUI application started!!");
     }
 

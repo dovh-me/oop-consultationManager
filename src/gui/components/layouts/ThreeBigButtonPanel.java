@@ -1,26 +1,26 @@
 package gui.components.layouts;
 
-import javax.swing.*;
+import javafx.geometry.Pos;
+import javafx.scene.control.Button;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.VBox;
+
 import java.awt.*;
-import java.awt.event.MouseAdapter;
 
-public class ThreeBigButtonPanel extends JPanel{
-    JPanel centerPanel = new JPanel();
+public class ThreeBigButtonPanel extends GridPane {
 
-    public ThreeBigButtonPanel(JButton... buttons) {
+    public ThreeBigButtonPanel(Button... buttons) {
+        super();
+        this.setHgap(5);
+        this.setAlignment(Pos.CENTER);
         // Style the content panel
-        this.setLayout(new GridLayout(1,3));
-        this.add(centerPanel, BorderLayout.CENTER);
-        this.centerPanel.setBackground(Color.RED);
+        this.setStyle("-fx-background-color: #f00");
 
-        Dimension btnDimension = new Dimension(200, 200);
-        for (JButton button : buttons) {
-            // Set dimensions for the buttons
-            button.setPreferredSize(btnDimension);
-            button.setVerticalTextPosition(SwingConstants.BOTTOM);
-            button.setHorizontalTextPosition(SwingConstants.CENTER);
+        for (int i =0;i< buttons.length; i++) {
             // Add buttons to the content panel
-            centerPanel.add(button);
+            this.add(buttons[i],i,0);
         }
+        this.setMinSize(600,200);
     }
 }

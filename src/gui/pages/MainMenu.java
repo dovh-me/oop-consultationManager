@@ -1,47 +1,48 @@
 package gui.pages;
 
-import gui.components.layouts.ApplicationFrame;
+import gui.components.MainMenuButton;
+import gui.components.Page;
+import gui.components.layouts.ApplicationRoot;
 import gui.components.layouts.ThreeBigButtonPanel;
-
-import javax.swing.*;
-import javax.swing.border.Border;
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.BorderPane;
+import main.GUIApplication;
 
 public class MainMenu extends Page {
-    private JButton addConsultationButton;
-    private JButton viewConsultationsButton;
-    private JButton viewDoctors;
+    private BorderPane contentPane;
+    private MainMenuButton addConsultationButton;
+    private MainMenuButton viewConsultationsButton;
+    private MainMenuButton viewDoctorsButton;
 
     public MainMenu() {
         this.initButtons();
 
-        this.setLayout(new BorderLayout());
+        this.contentPane = new BorderPane();
         ThreeBigButtonPanel mainPanel = new ThreeBigButtonPanel(
-                this.addConsultationButton, this.viewConsultationsButton, this.viewDoctors
+                this.addConsultationButton, this.viewConsultationsButton, this.viewDoctorsButton
         );
-        this.add(mainPanel, BorderLayout.CENTER);
-        this.setBackground(Color.BLUE);
-        ApplicationFrame.setApplicationTitle("Main Menu");
+        this.contentPane.setCenter(mainPanel);
+        this.setStyle("-fx-background-color:#00f");
+        this.getChildren().add(contentPane);
+        ApplicationRoot.setApplicationTitle("Main Menu");
+    }
+
+    @Override
+    public String getTitle() {
+        return "Main Menu";
     }
 
     private void initButtons() {
         // Initialize buttons
-        this.addConsultationButton = new JButton("Add Consultation", new ImageIcon(this.getClass().getResource("/assets/consultation.png")));
-        this.viewConsultationsButton = new JButton("View Consultations", new ImageIcon(this.getClass().getResource("/assets/consultation.png")));
-        this.viewDoctors = new JButton("View Doctors", new ImageIcon(this.getClass().getResource("/assets/doctor.png")));
+        this.addConsultationButton = new MainMenuButton("Add Consultation",new ImageView("/assets/consultation.png"));
+        this.viewConsultationsButton = new MainMenuButton("View Consultations",new ImageView("/assets/consultation.png"));
+        this.viewDoctorsButton = new MainMenuButton("View Doctors",new ImageView("assets/doctor.png"));
 
         // Register mouse click event listeners
-        this.addConsultationButton.addActionListener(( actionEvent) -> {
-        });
+        this.addConsultationButton.setOnAction(actionEvent -> GUIApplication.app.af.navigateTo(GUIApplication.app.getCheckAvailability()));
 
-        this.viewConsultationsButton.addActionListener((actionEvent -> {
+        this.viewConsultationsButton.setOnAction(actionEvent -> GUIApplication.app.af.navigateTo(GUIApplication.app.getViewConsultations()));
 
-        }));
-
-        this.viewDoctors.addActionListener((actionEvent -> {
-            Application.app.af.navigateTo(Application.app.getViewDoctors());
-        }));
+        this.viewDoctorsButton.setOnAction(actionEvent -> GUIApplication.app.af.navigateTo(GUIApplication.app.getViewDoctors()));
     }
 }

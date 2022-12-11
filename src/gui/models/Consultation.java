@@ -12,11 +12,17 @@ import java.util.List;
 
 public class Consultation implements Serializable, Comparable<Consultation>, TabularModel {
     public static String[] tableColumns = new String[]{"Date Time","Patient UID","Patient Name", "Doctor Name", "Cost"};
+
+    public static String[] tableFieldNames = new String[] {"date", "patientUID", "specialization", "contactNo", "doctorName", "cost"};
+
+    LocalDateTime consultationDateTime; // create a new constructor with this field
     LocalDate date;
     private float cost;
     private String notes;
     private Patient patient;
     private Doctor doctor;
+
+    private LocalTime time;
 
     public Consultation() {
     }
@@ -24,9 +30,14 @@ public class Consultation implements Serializable, Comparable<Consultation>, Tab
     public Consultation(Patient p, Doctor d, String date, String notes) throws DateTimeParseException {
         this.patient = p;
         this.doctor = d;
-        this.date = LocalDate.parse(date, Formats.DATE_FORMAT);
+        this.date = LocalDate.parse(date, Formats.DATE_FORMATTER);
         this.cost = 0;
         this.notes = notes;
+    }
+
+    public Consultation(Doctor d, LocalDateTime consultationDateTime) {
+        this.setDoctor(d);
+        this.consultationDateTime = consultationDateTime;
     }
 
     public LocalDate getDate() {
@@ -74,7 +85,27 @@ public class Consultation implements Serializable, Comparable<Consultation>, Tab
         int indexOfCurrent = consultationList.indexOf(this);
         LocalDateTime ldt = LocalDateTime.of(this.getDate(),
                 LocalTime.of(17,0).plusMinutes(30 * (indexOfCurrent + 1)));
-        return ldt.format(Formats.DATE_TIME_FORMAT);
+        return ldt.format(Formats.DATE_TIME_FORMATTER);
+    }
+
+    public String getPatientUID() {
+        return this.patient.getUid();
+    }
+
+    public String getDoctorName() {
+        return this.getDoctor().getFullName();
+    }
+
+    public LocalTime getTime() {
+        return time;
+    }
+
+    public void setTime(LocalTime time) {
+        this.time = time;
+    }
+
+    public LocalDateTime getConsultationDateTime() {
+        return consultationDateTime;
     }
 
     @Override
@@ -89,6 +120,6 @@ public class Consultation implements Serializable, Comparable<Consultation>, Tab
 
     @Override
     public String[] getTableRowData() {
-        return new String[]{date.format(Formats.DATE_FORMAT), patient.getUid(),patient.getName() + patient.getSurname(), doctor.getName() + doctor.getSurname(),Float.toString(cost) };
+        return new String[]{date.format(Formats.DATE_FORMATTER), patient.getUid(),patient.getName() + patient.getSurname(), doctor.getName() + doctor.getSurname(),Float.toString(cost) };
     }
 }

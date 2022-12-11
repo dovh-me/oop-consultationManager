@@ -1,26 +1,56 @@
 package gui.pages;
 
+import gui.components.Page;
 import gui.components.layouts.TableWithActionButtonsPanel;
 import gui.models.Doctor;
+import javafx.geometry.Pos;
+import javafx.scene.control.Button;
+import javafx.scene.layout.FlowPane;
+import main.GUIApplication;
 import util.ConsoleLog;
 
-import javax.swing.*;
 import java.util.ArrayList;
 
-public class ViewDoctors extends Page{
+public class ViewDoctors extends Page {
     private TableWithActionButtonsPanel<Doctor> mainContentPanel;
-    private JButton addConsultationButton;
+    private Button addConsultationButton;
 
     public ViewDoctors(ArrayList<Doctor> doctors) {
         initActionButtons();
-        this.mainContentPanel = new TableWithActionButtonsPanel<>(Doctor.tableColumns, doctors, addConsultationButton);
-        this.add(this.mainContentPanel);
+        this.mainContentPanel = new TableWithActionButtonsPanel<>(Doctor.tableFieldNames, Doctor.tableColumns, doctors, addConsultationButton);
+        this.mainContentPanel.getTable().getSelectionModel().selectedItemProperty().addListener((observable,oldValue, newValue) -> {
+            ConsoleLog.info("Table selection listener triggered...");
+            if(newValue == null) {
+                addConsultationButton.setDisable(true);
+                return;
+            }
+            System.out.println("Setting selected value...");
+            CheckAvailability.doctor = newValue;
+            addConsultationButton.setDisable(false);
+        });
+        this.getChildren().add(this.mainContentPanel);
     }
 
     public void initActionButtons() {
-        this.addConsultationButton = new JButton("Add Consultation");
-        this.addConsultationButton.addActionListener(actionEvent -> {
-            ConsoleLog.info("Add consultation button clicked");
+        this.addConsultationButton = new Button("Add Consultation");
+        this.addConsultationButton.setDisable(true);
+        this.addConsultationButton.setOnAction(actionEvent -> {
+            GUIApplication.app.af.navigateTo(GUIApplication.app.getCheckAvailability());
         });
+        FlowPane pane = new FlowPane();
+        pane.setMinWidth(Double.MAX_VALUE);
+        pane.setAlignment(Pos.CENTER_RIGHT);
+        pane.getChildren().add(this.addConsultationButton);
+    }
+
+    @Override
+    public String getTitle() {
+        return "View Doctors";
+    }
+
+    @Override
+    public void onNavigation() {
+        super.onNavigation();
+        mainContentPanel.initTableData();
     }
 }

@@ -1,5 +1,7 @@
 package util;
 
+import constants.RegExp;
+
 public abstract class GUIValidator <T>{
     private final String validationMessage;
     public GUIValidator (String validationMessage) {
@@ -14,10 +16,17 @@ public abstract class GUIValidator <T>{
 
     public abstract boolean validate(T input);
 
-    public static final GUIValidator<String> IS_EMPTY = new GUIValidator<String>("Field value cannot be empty.") {
+    public static final GUIValidator<javafx.scene.input.KeyEvent> NUMBERS_ONLY = new GUIValidator<javafx.scene.input.KeyEvent>() {
+        @Override
+        public boolean validate(javafx.scene.input.KeyEvent input) {
+            return input.getCharacter().matches(RegExp.RegExp_NUMBER_STRING);
+        }
+    };
+
+    public static final GUIValidator<String> NOT_EMPTY = new GUIValidator<String>("Field value cannot be empty.") {
         @Override
         public boolean validate(String input) {
-            return input.isEmpty();
+            return !input.isEmpty();
         }
     };
 
@@ -28,10 +37,31 @@ public abstract class GUIValidator <T>{
         }
     };
 
-    public static final GUIValidator<String> DATE_TIME_STRING = new GUIValidator<String>("Invalid date time string. Please follow the format (yyyy-MM-dd HH:mm).") {
+    public static final GUIValidator<String> DATE_TIME_STRING = new GUIValidator<String>("Invalid date time string (yyyy-MM-dd HH:mm).") {
         @Override
         public boolean validate(String input) {
             return Validator.DATE_TIME_STRING.validate(input);
+        }
+    };
+
+    public static final GUIValidator NOT_NULL = new GUIValidator("A value is required for this field") {
+        @Override
+        public boolean validate(Object input) {
+            return input != null;
+        }
+    };
+
+    public static final GUIValidator<String> PHONE_NUMBER = new GUIValidator<String>() {
+        @Override
+        public boolean validate(String input) {
+            return Validator.PHONE_NUMBER_STRING.validate(input);
+        }
+    };
+
+    public static final GUIValidator<String> LETTERS_ONLY = new GUIValidator<String>() {
+        @Override
+        public boolean validate(String input) {
+            return Validator.LETTER_STRING.validate(input);
         }
     };
 }

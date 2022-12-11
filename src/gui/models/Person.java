@@ -59,6 +59,6 @@ public class Person implements Serializable, TabularModel {
 
     @Override
     public String[] getTableRowData() {
-        return new String[]{this.name + this.surname, this.dob.format(Formats.DATE_FORMAT), this.contactNo};
+        return new String[]{this.name + this.surname, this.dob.format(Formats.DATE_FORMATTER), this.contactNo};
     }
 }

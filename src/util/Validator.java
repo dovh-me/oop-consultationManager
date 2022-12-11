@@ -5,8 +5,6 @@ import constants.RegExp;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.Arrays;
 import java.util.List;
@@ -31,7 +29,7 @@ public abstract class Validator<T> {
         @Override
         public boolean validate(String input) {
             try {
-                LocalDate.parse(input, Formats.DATE_FORMAT);
+                LocalDate.parse(input, Formats.DATE_FORMATTER);
             } catch (DateTimeParseException e) {
                 e.printStackTrace();
                 ConsoleLog.error("Invalid date format");
@@ -46,7 +44,7 @@ public abstract class Validator<T> {
         @Override
         public boolean validate(String input) {
             try {
-                LocalDateTime.parse(input, Formats.DATE_TIME_FORMAT);
+                LocalDateTime.parse(input, Formats.DATE_TIME_FORMATTER);
             } catch (DateTimeParseException e) {
                 ConsoleLog.error("Invalid date time format");
                 return false;
@@ -72,12 +70,11 @@ public abstract class Validator<T> {
         }
     };
 
-    public static final Validator<String> CONSULTATION_DATE = new Validator<String>() {
+    public static final Validator<String> CONSULTATION_DATE_TIME = new Validator<String>() {
         @Override
         public boolean validate(String input) {
-            if(!Validator.DATE_STRING.validate(input)) return false;
-            if( LocalDateTime.now().compareTo(LocalDateTime.of(LocalDate.parse(input,
-                    Formats.DATE_FORMAT), LocalTime.of(0,0))) > 0){
+            if(!Validator.DATE_TIME_STRING.validate(input)) return false;
+            if( LocalDateTime.parse(input, Formats.DATE_TIME_FORMATTER).isAfter(LocalDateTime.now())){
                 ConsoleLog.error("Consultation can only be booked for future " +
                         "dates");
                 return false;
