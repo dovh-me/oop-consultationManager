@@ -1,26 +1,33 @@
 package gui.pages;
 
+import exceptions.CryptoException;
 import gui.components.CDatePickerInputGroup;
+import gui.components.CNotesInputGroup;
 import gui.components.CTextFieldInputGroup;
 import gui.components.Page;
 import gui.models.Consultation;
+import gui.models.Patient;
 import javafx.geometry.Pos;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.*;
 import main.GUIApplication;
+import util.AlertBox;
+import util.ConsoleLog;
 import util.GUIValidator;
 import util.Validator;
 
+import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 
 public class PatientInfo extends Page {
-    private static final double prefMinWidth = 200.0;
-
+    public static Consultation consultation;
     private VBox mainPanel;
 
     private Label doctorLabel;
@@ -30,12 +37,14 @@ public class PatientInfo extends Page {
     private CTextFieldInputGroup surname;
     private CDatePickerInputGroup dateOfBirthDay;
     private CTextFieldInputGroup contactNumber;
+    private CNotesInputGroup notes;
     private Button addConsultationButton;
+
 
     public PatientInfo() {
         this.mainPanel = new VBox(5);
-        this.mainPanel.setPrefWidth(450);
-        this.mainPanel.setPrefHeight(450);
+        this.mainPanel.setAlignment(Pos.CENTER);
+        this.mainPanel.setPrefWidth(500);
         initDoctorInfoPanel();
         initPatientInfoPanel();
         initAddConsultationButton();
@@ -80,15 +89,17 @@ public class PatientInfo extends Page {
         this.contactNumber = new CTextFieldInputGroup("Contact Number:", new GUIValidator[] {GUIValidator.NUMBERS_ONLY}, new GUIValidator[] {
                 GUIValidator.NOT_EMPTY,GUIValidator.PHONE_NUMBER});
         // notes
+        this.notes = new CNotesInputGroup("Notes");
 
         // add the fields to the panel
         this.mainPanel.getChildren().addAll(
-                this.firstName, this.surname, this.dateOfBirthDay, this.contactNumber
+                this.firstName, this.surname, this.dateOfBirthDay, this.contactNumber, this.notes
         );
         this.gridPanelApplyStyles(this.firstName);
         this.gridPanelApplyStyles(this.surname);
         this.gridPanelApplyStyles(this.dateOfBirthDay);
         this.gridPanelApplyStyles(this.contactNumber);
+        this.gridPanelApplyStyles(this.notes);
     }
 
     private void initAddConsultationButton() {
@@ -100,8 +111,14 @@ public class PatientInfo extends Page {
 
         this.addConsultationButton.setOnAction((event -> {
             if(!validateInputFields()) return;
-
-            GUIApplication.app.af.navigateTo(GUIApplication.app.getPatientInfo());
+            Consultation c = getPatientInfoData();
+            if(c == null){
+                AlertBox.showErrorAlert("Consultation not added! Try again!");
+                GUIApplication.app.af.navigateTo(GUIApplication.app.getMainMenu());
+                return;
+            }
+            GUIApplication.app.manager.addConsultation(getPatientInfoData());
+            GUIApplication.app.af.navigateTo(GUIApplication.app.getMainMenu());
         }));
 
         pane.getChildren().add(this.addConsultationButton);
@@ -129,8 +146,28 @@ public class PatientInfo extends Page {
     private GridPane gridPanelApplyStyles(GridPane p) {
         p.setVgap(5);
         p.setHgap(5);
-        p.getColumnConstraints().add(new ColumnConstraints(200));
+        p.getColumnConstraints().add(new ColumnConstraints(250));
+        p.setAlignment(Pos.CENTER);
         return p;
+    }
+
+    private Consultation getPatientInfoData() {
+        try{
+            Consultation c = PatientInfo.consultation;
+            c.setPatient(new Patient(this.firstName.getInput(), this.surname.getInput(), this.dateOfBirthDay.getInput(), this.contactNumber.getInput()));
+            c.setTextNotes(this.notes.getTextNotes());
+            c.setNoteImages(this.notes.getImageNotes());
+            if(c.validateConsultation()) {
+                // reset the consultation field in the Check availability page - move to caller
+                CheckAvailability.doctor = null;
+                CheckAvailability.consultationDateTime = null;
+                return c;
+            }
+        } catch (IOException | NoSuchAlgorithmException | CryptoException e) {
+            AlertBox.showErrorAlert("Error loading notes");
+            e.printStackTrace();
+        }
+        return null;
     }
 
     @Override
@@ -141,6 +178,7 @@ public class PatientInfo extends Page {
     @Override
     public void onNavigation() {
         super.onNavigation();
-        loadDoctorInfoPanelData(CheckAvailability.consultation);
+        PatientInfo.consultation = new Consultation(CheckAvailability.doctor, CheckAvailability.consultationDateTime);
+        loadDoctorInfoPanelData(PatientInfo.consultation);
     }
 }

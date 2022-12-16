@@ -22,7 +22,7 @@ public class MainMenu extends Page {
                 this.addConsultationButton, this.viewConsultationsButton, this.viewDoctorsButton
         );
         this.contentPane.setCenter(mainPanel);
-        this.setStyle("-fx-background-color:#00f");
+        this.setStyle("-fx-background-color:#6262db");
         this.getChildren().add(contentPane);
         ApplicationRoot.setApplicationTitle("Main Menu");
     }

@@ -2,7 +2,7 @@ package exceptions;
 
 public class IllegalConsultationException extends Exception{
     public IllegalConsultationException() {
-        super(String.format("Consultation you are trying to add is illegal. Please check the consultation parameters"));
+        super("An operation has been performed on an incomplete consultation. Please make sure all the fields are populated");
     }
 
     public IllegalConsultationException(String message) {

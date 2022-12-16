@@ -11,8 +11,6 @@ import javafx.stage.Stage;
 import util.ConsoleLog;
 
 import java.io.File;
-import java.net.URL;
-import java.util.ArrayList;
 import java.util.LinkedList;
 
 public class CSelectImageNotes extends VBox {
@@ -24,7 +22,7 @@ public class CSelectImageNotes extends VBox {
         FileChooser fileChooser = configFileChooser();
         this.selectedFiles = new LinkedList<>();
         this.validationMessage = new Label();
-        this.selectFileButton = new Button();
+        this.selectFileButton = new Button("Select File");
 
         try {
             selectFileButton.setOnAction((event) -> {
@@ -39,8 +37,6 @@ public class CSelectImageNotes extends VBox {
         // add elements to the main pane
         this.getChildren().addAll(selectFileButton, validationMessage);
     }
-
-
 
     private void addSelectedFileRecord(File file) {
         Button removeRecordButton = new Button("X");

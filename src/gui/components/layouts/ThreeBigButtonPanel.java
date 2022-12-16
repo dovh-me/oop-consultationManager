@@ -14,8 +14,6 @@ public class ThreeBigButtonPanel extends GridPane {
         super();
         this.setHgap(5);
         this.setAlignment(Pos.CENTER);
-        // Style the content panel
-        this.setStyle("-fx-background-color: #f00");
 
         for (int i =0;i< buttons.length; i++) {
             // Add buttons to the content panel

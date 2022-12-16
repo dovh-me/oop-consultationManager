@@ -4,26 +4,57 @@ import gui.components.Page;
 import gui.components.layouts.TableWithActionButtonsPanel;
 import gui.models.Consultation;
 import javafx.scene.control.Button;
+import main.GUIApplication;
 import util.ConsoleLog;
 
-import java.util.ArrayList;
-
 public class ViewConsultations extends Page {
-
+    private Consultation selectedConsultation;
     private TableWithActionButtonsPanel<Consultation> mainContentPanel;
-    private Button addConsultationButton;
+    private Button viewConsultationButton;
+    private Button cancelConsultationButton;
 
-    public ViewConsultations(ArrayList<Consultation> consultations) {
+    public ViewConsultations() {
         initActionButtons();
-        this.mainContentPanel = new TableWithActionButtonsPanel<>(Consultation.tableFieldNames, Consultation.tableColumns, consultations, addConsultationButton);
+        this.mainContentPanel = new TableWithActionButtonsPanel<>(Consultation.tableFieldNames, Consultation.tableColumns, GUIApplication.app.manager.getConsultations(), viewConsultationButton, cancelConsultationButton);
         this.getChildren().add(this.mainContentPanel);
+
+        mainContentPanel.getTable().getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+            ConsoleLog.info("Table selection listener triggered...");
+            if(newValue == null) {
+                viewConsultationButton.setDisable(true);
+                cancelConsultationButton.setDisable(true);
+                return;
+            }
+            this.selectedConsultation = newValue;
+            // enabling buttons if a record is selected in the table
+            viewConsultationButton.setDisable(false);
+            cancelConsultationButton.setDisable(false);
+        });
     }
 
     public void initActionButtons() {
-        this.addConsultationButton = new Button("View Consultation");
-        this.addConsultationButton.setOnAction(actionEvent -> {
-            ConsoleLog.info("View Consultation button clicked");
-        });
+        try {
+            this.cancelConsultationButton = new Button("Cancel Consultation");
+            this.viewConsultationButton = new Button("View Consultation");
+
+            this.cancelConsultationButton.setDisable(true);
+            this.viewConsultationButton.setDisable(true);
+
+            this.cancelConsultationButton.setOnAction(actionEvent -> {
+                ConsoleLog.info("Removing the selected consultation");
+                GUIApplication.app.manager.cancelConsultation(
+                        this.selectedConsultation
+                );
+            });
+            this.viewConsultationButton.setOnAction(actionEvent -> {
+                ConsoleLog.info("View Consultation button clicked");
+                ViewConsultation.consultation = this.selectedConsultation;
+                GUIApplication.app.af.navigateTo(GUIApplication.app.getViewConsultation());
+            });
+        } catch (Exception e) {
+            ConsoleLog.error("Unknown error in the actions buttons");
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -34,6 +65,6 @@ public class ViewConsultations extends Page {
     @Override
     public void onNavigation() {
         super.onNavigation();
-        mainContentPanel.initTableData();
+        mainContentPanel.loadTableData(GUIApplication.app.manager.getConsultations());
     }
 }

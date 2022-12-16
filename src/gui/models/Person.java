@@ -20,6 +20,17 @@ public class Person implements Serializable, TabularModel {
         this.dob = LocalDate.parse(dob);
     }
 
+    public Person(String name, String surname, LocalDate dob, String contactNo) {
+        this.name = name;
+        this.surname = surname;
+        this.contactNo = contactNo;
+        this.dob = dob;
+    }
+
+    public String getFullName() {
+        return this.getName() + " " + this.getSurname();
+    }
+
     public String getName() {
         return name;
     }
@@ -50,15 +61,5 @@ public class Person implements Serializable, TabularModel {
 
     public void setContactNo(String contactNo) {
         this.contactNo = contactNo;
-    }
-
-    @Override
-    public String[] getTableColumnNames() {
-        return new String[]{"Name", "Date of Birth", "Contact No."};
-    }
-
-    @Override
-    public String[] getTableRowData() {
-        return new String[]{this.name + this.surname, this.dob.format(Formats.DATE_FORMATTER), this.contactNo};
     }
 }

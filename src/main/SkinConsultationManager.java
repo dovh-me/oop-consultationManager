@@ -1,5 +1,6 @@
 package main;
 
+import gui.models.Consultation;
 import gui.models.Doctor;
 
 import java.time.LocalDateTime;
@@ -12,8 +13,8 @@ public interface SkinConsultationManager {
     Doctor getAvailableDoctor(String specialization, LocalDateTime dateTime);
     void viewDoctors();
 
-    void addConsultation();
+    void addConsultation(Consultation consultation);
     void updateConsultation();
-    void cancelConsultation();
+    void cancelConsultation(Consultation consultation);
     void viewConsultations();
 }

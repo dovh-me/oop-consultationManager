@@ -21,7 +21,7 @@ import java.util.Optional;
 
 public class CheckAvailability extends Page {
     public static Doctor doctor;
-    public static Consultation consultation;
+    public static LocalDateTime consultationDateTime;
     private CDatePickerInputGroup consultationDate;
     private CTimeFieldInputGroup consultationTime;
     private CTextFieldInputGroup doctorMedLicNo;
@@ -113,7 +113,7 @@ public class CheckAvailability extends Page {
             loadInfoPanelData(true, doctor);
             this.continueButton.setDisable(false);
             CheckAvailability.doctor = doctor;
-            CheckAvailability.consultation = new Consultation(doctor, consultationDateTime);
+            CheckAvailability.consultationDateTime = consultationDateTime;
         });
 
         checkAvailabilityButton.setAlignment(Pos.CENTER_RIGHT);
@@ -158,7 +158,7 @@ public class CheckAvailability extends Page {
 
         this.continueButton.setOnAction((event -> {
             if(
-                    CheckAvailability.doctor == null || CheckAvailability.consultation.getConsultationDateTime() == null
+                    CheckAvailability.doctor == null || CheckAvailability.consultationDateTime == null
             ) return;
 
             GUIApplication.app.af.navigateTo(GUIApplication.app.getPatientInfo());
@@ -190,7 +190,7 @@ public class CheckAvailability extends Page {
     }
 
     private void resetAvailabilityPanelFields() {
-        CheckAvailability.consultation = null;
+        CheckAvailability.consultationDateTime = null;
         this.validationMessage.setText("");
         this.validationMessage.setVisible(false);
 

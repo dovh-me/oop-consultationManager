@@ -4,10 +4,11 @@ import gui.components.layouts.ApplicationRoot;
 import gui.pages.*;
 import javafx.application.Application;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import util.ConsoleLog;
+
+import javax.swing.text.View;
 
 public class GUIApplication extends Application{
     public static Stage primaryStage;
@@ -19,13 +20,19 @@ public class GUIApplication extends Application{
     private ViewConsultations viewConsultations;
     private CheckAvailability checkAvailability;
     private PatientInfo patientInfo;
+    private ViewConsultation viewConsultation;
+
     private static WestminsterSkinConsultationManager mTemp;
 
     public static void start(WestminsterSkinConsultationManager manager) {
-        GUIApplication.mTemp = manager;
-        ConsoleLog.info("Starting GUI...");
-        GUIApplication.launch(GUIApplication.class);
-        ConsoleLog.success("GUI instance stopped...");
+        try {
+            GUIApplication.mTemp = manager;
+            ConsoleLog.info("Starting GUI...");
+            GUIApplication.launch(GUIApplication.class);
+            ConsoleLog.success("GUI instance stopped...");
+        } catch (IllegalStateException e) {
+            ConsoleLog.error("Unfortunately you have to restart the CLI application to respawn a GUI. Sorry for the inconvenience caused.");
+        }
     }
 
     public void initializeConsultationManager(WestminsterSkinConsultationManager manager) {
@@ -39,7 +46,8 @@ public class GUIApplication extends Application{
                 this.viewConsultations,
                 this.viewDoctors,
                 this.checkAvailability,
-                this.patientInfo
+                this.patientInfo,
+                this.viewConsultation
         );
         af.load();
     }
@@ -64,12 +72,17 @@ public class GUIApplication extends Application{
         return patientInfo;
     }
 
+    public ViewConsultation getViewConsultation() {
+        return viewConsultation;
+    }
+
     private void initPages() {
         this.mainMenu = new MainMenu();
-        this.viewDoctors = new ViewDoctors(this.manager.getDoctors());
+        this.viewDoctors = new ViewDoctors();
         this.checkAvailability = new CheckAvailability();
-        this.viewConsultations = new ViewConsultations(this.manager.getConsultations());
+        this.viewConsultations = new ViewConsultations();
         this.patientInfo = new PatientInfo();
+        this.viewConsultation = new ViewConsultation();
     }
 
     @Override

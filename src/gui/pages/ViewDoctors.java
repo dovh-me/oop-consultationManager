@@ -9,15 +9,13 @@ import javafx.scene.layout.FlowPane;
 import main.GUIApplication;
 import util.ConsoleLog;
 
-import java.util.ArrayList;
-
 public class ViewDoctors extends Page {
     private TableWithActionButtonsPanel<Doctor> mainContentPanel;
     private Button addConsultationButton;
 
-    public ViewDoctors(ArrayList<Doctor> doctors) {
+    public ViewDoctors() {
         initActionButtons();
-        this.mainContentPanel = new TableWithActionButtonsPanel<>(Doctor.tableFieldNames, Doctor.tableColumns, doctors, addConsultationButton);
+        this.mainContentPanel = new TableWithActionButtonsPanel<>(Doctor.tableFieldNames, Doctor.tableColumns, GUIApplication.app.manager.getDoctors(), addConsultationButton);
         this.mainContentPanel.getTable().getSelectionModel().selectedItemProperty().addListener((observable,oldValue, newValue) -> {
             ConsoleLog.info("Table selection listener triggered...");
             if(newValue == null) {
@@ -51,6 +49,6 @@ public class ViewDoctors extends Page {
     @Override
     public void onNavigation() {
         super.onNavigation();
-        mainContentPanel.initTableData();
+        mainContentPanel.loadTableData(GUIApplication.app.manager.getDoctors());
     }
 }
