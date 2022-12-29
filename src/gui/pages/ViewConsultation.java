@@ -1,114 +1,208 @@
 package gui.pages;
 
-import constants.Formats;
 import exceptions.CryptoException;
 import gui.components.CVerticalImageGallery;
 import gui.components.Page;
+import gui.components.UpdateConsultationPopup;
 import gui.models.Consultation;
+import gui.models.Doctor;
+import gui.models.Patient;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
-import javafx.scene.layout.*;
+import javafx.scene.layout.ColumnConstraints;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
 import main.GUIApplication;
 import util.AlertBox;
 import util.ConsoleLog;
 import util.CryptoUtils;
-import util.GUIValidator;
 
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
+import java.time.format.DateTimeFormatter;
+import java.util.Collections;
 
 public class ViewConsultation extends Page {
-    public static Consultation consultation;
-
-    private final Label doctorLbl;
-    private final Label patientLbl;
-    private final Label consultationDateTime;
-
-    private final Label dateOfBirthLbl;
-    private final Label contactNoLbl;
-    private final TextArea textNotesArea;
-    private final CVerticalImageGallery noteImages;
+    public static SimpleObjectProperty<Consultation> consultationSimpleObjectProperty = new SimpleObjectProperty<>();
 
     public ViewConsultation() {
-        doctorLbl = new Label();
-        patientLbl = new Label();
-        consultationDateTime = new Label();
-        dateOfBirthLbl = new Label();
-        contactNoLbl = new Label();
-        textNotesArea = new TextArea();
-        noteImages = new CVerticalImageGallery();
-        VBox mainPane = new VBox();
-        mainPane.setAlignment(Pos.CENTER);
-        mainPane.setSpacing(10);
+        GridPane mainPane = createGeneralGridPane();
+        mainPane.setVgap(10);
+        mainPane.setHgap(5);
+        mainPane.setStyle("-fx-padding: 5px;");
 
-        mainPane.getChildren().add(new Label("Summary"));
-        GridPane doctorInfoPane = new GridPane();
-        doctorInfoPane.add(new Label("Doctor Name/Med Lic No."), 0,0);
-        doctorInfoPane.add(doctorLbl, 1,0);
-        doctorInfoPane.add(new Label("Patient Name/Patient UID"), 0,1);
-        doctorInfoPane.add(patientLbl, 1,1);
-        doctorInfoPane.add(new Label("Consultation Date Time"), 0,2);
-        doctorInfoPane.add(consultationDateTime, 1,2);
-        doctorInfoPane.setVgap(10);
-        doctorInfoPane.setAlignment(Pos.CENTER);
-        mainPane.getChildren().add(doctorInfoPane);
+        mainPane.add(initPatientPane(),0,0);
+        mainPane.add(initDoctorPane(),1,0);
+        mainPane.add(initConsultationPane(),0,1,2,1);
+        mainPane.add(createActionPane(),0,2,2,1);
 
-        GridPane patientInfoPane = new GridPane();
-        ScrollPane patientScrollableWrapper = new ScrollPane();
-        patientInfoPane.add(new Label("Date Of Birth"), 0,0);
-        patientInfoPane.add(dateOfBirthLbl, 1,0);
-        patientInfoPane.add(new Label("Contact No"), 0,1);
-        patientInfoPane.add(contactNoLbl, 1,1);
-        patientInfoPane.add(new Label("Notes"), 0,2);
-        patientInfoPane.add(createGallery(), 1,2);
-        patientInfoPane.setVgap(10);
-        patientInfoPane.getRowConstraints().add(new RowConstraints(Control.USE_COMPUTED_SIZE));
-        patientInfoPane.setAlignment(Pos.CENTER);
-        patientScrollableWrapper.setContent(patientInfoPane);
-        patientScrollableWrapper.setHmax(800);
-        mainPane.getChildren().add(patientScrollableWrapper);
-
-        mainPane.getChildren().add(createActionPane());
         this.getChildren().add(mainPane);
     }
+    private GridPane initDoctorPane() {
+        GridPane pane = this.createGeneralGridPane();
 
-    public void loadConsultation(Consultation consultation) {
-        doctorLbl.setText(String.format("%s / %s",consultation.getDoctor().getFullName(), consultation.getDoctor().getMedicalLicenseNo()));
-        patientLbl.setText(String.format("%s / %s", consultation.getPatient().getFullName(), consultation.getPatient().getUid()));
-        consultationDateTime.setText(consultation.getConsultationDateTime().format(Formats.DATE_TIME_OUTPUT_FORMAT));
+        Label doctorName = new Label("--");
+        Label medicalLicense = new Label("--");
+        Label specialisation = new Label("--");
 
-        dateOfBirthLbl.setText(consultation.getPatient().getDob().format(Formats.DATE_FORMATTER));
-        contactNoLbl.setText(consultation.getPatient().getContactNo());
-        try {
-            textNotesArea.setText(consultation.getTextNotes());
-            noteImages.loadContent(consultation.getNoteImages());
-        } catch (NoSuchAlgorithmException | IOException | CryptoException e) {
-            ConsoleLog.error("There was an error loading notes");
-            e.printStackTrace();
-        }
+        pane.add(createSectionTitleLabel("Doctor Information"),0,0,2,1);
+        pane.addRow(1, new Label("Doctor Name:"), doctorName);
+        pane.addRow(2, new Label("Medical License No:"), medicalLicense);
+        pane.addRow(3, new Label("Specialisation:"), specialisation);
+        pane.add(new Separator(Orientation.HORIZONTAL),0,4,2,1);
+
+        // add the binding
+        ViewConsultation.consultationSimpleObjectProperty.addListener((observable, oldValue, newValue) -> {
+            if(newValue == null || newValue.getDoctor() == null){
+                doctorName.setText("--");
+                medicalLicense.setText("--");
+                specialisation.setText("--");
+                return;
+            }
+            Doctor d = newValue.getDoctor();
+            doctorName.setText("Dr. " + d.getFullName());
+            medicalLicense.setText(d.getMedicalLicenseNo());
+            specialisation.setText(d.getSpecialization());
+
+        });
+
+        return pane;
+    }
+
+    private GridPane initPatientPane() {
+        GridPane pane = this.createGeneralGridPane();
+
+        Label patientUID = new Label("--");
+        Label patientName = new Label("--");
+        Label patientContactNo = new Label("--");
+
+        pane.add(createSectionTitleLabel("Patient Information"),0,0,2,1);
+        pane.addRow(1, new Label("Patient UID: "), patientUID);
+        pane.addRow(2, new Label("Patient Name; "), patientName);
+        pane.addRow(3, new Label("Contact No: "), patientContactNo);
+        pane.add(new Separator(Orientation.HORIZONTAL),0,4,2,1);
+
+        // add the binding
+        ViewConsultation.consultationSimpleObjectProperty.addListener((observable, oldValue, newValue) -> {
+            if(newValue == null || newValue.getPatient() == null){
+                patientUID.setText("--");
+                patientName.setText("--");
+                patientContactNo.setText("--");
+                return;
+            }
+            Patient p = newValue.getPatient();
+            patientUID.setText(p.getUid());
+            patientName.setText(p.getFullName());
+            patientContactNo.setText(p.getContactNo());
+
+        });
+
+        return pane;
+    }
+
+    private GridPane initConsultationPane() {
+        GridPane consultationPane = createGeneralGridPane();
+        GridPane summaryFieldsPane = createGeneralGridPane();
+        ScrollPane scrollableWrapper = new ScrollPane();
+        Label costLabel = new Label("0.00");
+        Label consultationDateTime = new Label("--");
+        TextArea textNotes = new TextArea("No notes");
+        CVerticalImageGallery noteImages = new CVerticalImageGallery();
+
+        scrollableWrapper.setContent(noteImages);
+        scrollableWrapper.setHmax(800);
+        consultationPane.setHgap(5);
+
+        consultationPane.add(createSectionTitleLabel("Consultation Information"), 0,0,2,1);
+        summaryFieldsPane.addRow(0,new Label("Consultation Cost: "), costLabel);
+        summaryFieldsPane.addRow(1,new Label("Consultation Date/Time: "), consultationDateTime);
+        summaryFieldsPane.addRow(2,new Label("Consultation Notes: "), textNotes);
+
+        consultationPane.add(summaryFieldsPane, 0,1);
+        consultationPane.add(scrollableWrapper, 1,1);
+        consultationPane.add(new Separator(Orientation.HORIZONTAL),0,2,2,1);
+
+        // add the binding
+        ViewConsultation.consultationSimpleObjectProperty.addListener((observable, oldValue, newValue) -> {
+            try {
+                if(newValue == null) {
+                    costLabel.setText("0.00");
+                    consultationDateTime.setText("--");
+                    textNotes.setText("--");
+                    noteImages.loadContent(Collections.emptyList());
+                    return;
+                }
+                Consultation c = newValue;
+                String notesString = c.getTextNotes();
+
+                costLabel.setText(Float.toString(c.getCost()));
+                consultationDateTime.setText(c.getConsultationDateTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd / kk:mm a")));
+                textNotes.setText(notesString.isEmpty()? "--No Notes--": notesString);
+                noteImages.loadContent(c.getNoteImageBytes());
+            } catch (NoSuchAlgorithmException | IOException | CryptoException e) {
+                String errorMessage = "There was an error loading notes. Please try again.";
+                ConsoleLog.error(errorMessage + "\n" +  e.getLocalizedMessage());
+                AlertBox.showErrorAlert(errorMessage);
+                GUIApplication.app.af.navigateTo(GUIApplication.app.getMainMenu());
+            } catch (Exception e) {
+                String errorMessage = "Unexpected error occurred please report an issue";
+                ConsoleLog.error(errorMessage + "\n" +  e.getLocalizedMessage());
+                AlertBox.showErrorAlert(errorMessage);
+                GUIApplication.app.af.navigateTo(GUIApplication.app.getMainMenu());
+            }
+        });
+
+        return consultationPane;
+    }
+
+    private GridPane createGeneralGridPane() {
+        GridPane pane = new GridPane();
+        ColumnConstraints columnConstraints = new ColumnConstraints();
+        columnConstraints.setPercentWidth(50);
+        pane.setVgap(10);
+        pane.getColumnConstraints().addAll(columnConstraints,columnConstraints);
+        return pane;
     }
 
     private HBox createActionPane() {
         HBox pane = new HBox();
         pane.setAlignment(Pos.CENTER_RIGHT);
 
+        Button backButton = new Button("Back");
         Button updateConsultation = new Button("Update Consultation");
         Button cancelConsultation =  new Button("Cancel Consultation");
 
-        updateConsultation.setOnAction((actionEvent) -> {});
-        cancelConsultation.setOnAction((actionEvent) -> {});
+
+        updateConsultation.setOnAction((actionEvent) -> {
+            GUIApplication.primaryStage.getScene().getRoot().setDisable(true);
+            new UpdateConsultationPopup(ViewConsultation.consultationSimpleObjectProperty.get()).showAndWait();
+            GUIApplication.primaryStage.getScene().getRoot().setDisable(false);
+            Consultation c = ViewConsultation.consultationSimpleObjectProperty.get();
+            ViewConsultation.consultationSimpleObjectProperty.set(null);
+            ViewConsultation.consultationSimpleObjectProperty.set(c);
+        });
+        cancelConsultation.setStyle("-fx-background-color: #f00; -fx-text-fill: #fff;");
+        cancelConsultation.setOnAction((actionEvent) -> {
+            GUIApplication.app.manager.cancelConsultation(
+                    ViewConsultation.consultationSimpleObjectProperty.get()
+            );
+            GUIApplication.app.af.navigateToPrev();
+        });
+        backButton.setDefaultButton(true);
+        backButton.setOnAction((actionEvent) -> {
+            GUIApplication.app.af.navigateToPrev();
+        });
 
         pane.getChildren().addAll(updateConsultation, cancelConsultation);
         return pane;
     }
 
-    private VBox createGallery() {
-        VBox pane = new VBox();
-        pane.setSpacing(5);
-        pane.getChildren().add(textNotesArea);
-        pane.getChildren().add(noteImages);
-
-        return pane;
+    private Label createSectionTitleLabel(String labelText) {
+        Label  l = new Label(labelText);
+        l.setStyle("-fx-font-weight: bold;");
+        return  l;
     }
 
     @Override
@@ -118,13 +212,17 @@ public class ViewConsultation extends Page {
 
     @Override
     public void onNavigation() {
-        if(ViewConsultation.consultation == null || !ViewConsultation.consultation.validateConsultation()) {
+        if(ViewConsultation.consultationSimpleObjectProperty.get() == null || !ViewConsultation.consultationSimpleObjectProperty.get().validateConsultation()) {
             AlertBox.showErrorAlert("There was an error loading the consultation info. Navigating back to main page!");
             GUIApplication.app.af.navigateTo(GUIApplication.app.getMainMenu());
             return;
         }
-
-        loadConsultation(ViewConsultation.consultation);
         super.onNavigation();
+    }
+
+    @Override
+    public void onExit() {
+        super.onExit();
+        CryptoUtils.clearEncryptedFiles();
     }
 }

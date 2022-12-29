@@ -5,27 +5,30 @@ import exceptions.CryptoException;
 import exceptions.IllegalConsultationException;
 import gui.components.TabularModel;
 import main.GUIApplication;
-import org.apache.commons.io.FileUtils;
 import util.AlertBox;
 import util.ConsoleLog;
 import util.CryptoUtils;
 
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.Serializable;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.Collectors;
 
 public class Consultation implements Serializable, Comparable<Consultation>, TabularModel {
-    public static String[] tableColumns = new String[]{"Date Time","Patient UID", "Patient Name", "Doctor Name","Specialization", "Cost"};
-    public static String[] tableFieldNames = new String[] {"consultationDateTime", "patientUID", "patientName", "doctorName","specialization", "cost"};
-    LocalDateTime consultationDateTime; // create a new constructor with this field
+    public static String[] tableColumns = new String[]{"Date Time", "Consultation UID", "Patient UID", "Patient Name", "Doctor Name", "Specialization", "Cost"};
+    public static String[] tableFieldNames = new String[]{"consultationDateTime", "consultationUID", "patientUID", "patientName", "doctorName", "specialization", "cost"};
+    private String consultationUID;
+    private LocalDateTime consultationDateTime; // create a new constructor with this field
     private float cost;
     private File textNotes;
-    private LinkedList<File> noteImages = new LinkedList<>();
+    private ArrayList<File> noteImages = new ArrayList<>();
     private Patient patient;
     private Doctor doctor;
     private SecretKey encryptKey;
@@ -40,7 +43,8 @@ public class Consultation implements Serializable, Comparable<Consultation>, Tab
         this.cost = 0;
     }
 
-    public Consultation(Doctor d, LocalDateTime consultationDateTime) {
+    public Consultation(Patient p, Doctor d, LocalDateTime consultationDateTime) {
+        this.setPatient(p);
         this.setDoctor(d);
         this.consultationDateTime = consultationDateTime;
     }
@@ -49,18 +53,44 @@ public class Consultation implements Serializable, Comparable<Consultation>, Tab
         return this.patient != null && this.doctor != null && this.consultationDateTime != null;
     }
 
-    public void clearAssets() {
-        if(this.noteImages == null || this.noteImages.size() == 0 || !this.validateConsultation()) return;
+    public void updateConsultation(Float cost, String textNotes, ArrayList<File> notesImages) throws IllegalConsultationException {
+        try {
+            if (cost != null)
+                this.setCost(cost);
 
-        for (File noteImage : noteImages) {
-            File outputFile = new File(String.format("./data/%s/%s",this.getPatient().getUid(), noteImage.getName()));
-            if(outputFile.delete()) ConsoleLog.info(String.format("File deleted successfully! %s", noteImage.getPath()));
-            else ConsoleLog.error(String.format("There was an error deleting the file. Please delete manually %s", noteImage.getPath()));
+            this.setTextNotes(textNotes);
+            // delete unwanted assets
+            this.deleteUnusedAssets(notesImages);
+            this.setNoteImages(notesImages);
+        } catch (IOException | CryptoException | NoSuchAlgorithmException e) {
+            throw new IllegalConsultationException("Error updating consultation");
+        }
+    }
+
+    public void clearAssets() {
+        try {
+            if (this.noteImages == null || this.noteImages.size() == 0 || !this.validateConsultation()) return;
+
+            for (File noteImage : noteImages) {
+                if (noteImage.delete())
+                    ConsoleLog.info(String.format("File deleted successfully! %s", noteImage.getPath()));
+                else
+                    ConsoleLog.error(String.format("There was an error deleting the file. Please delete manually %s", noteImage.getPath()));
+            }
+            // delete the text notes
+            if (this.textNotes.delete())
+                ConsoleLog.log("Successfully deleted the text notes file for the consultation: " + this.consultationUID);
+            else
+                ConsoleLog.error("There was an error deleting text notes for the consultation: " + this.consultationUID +
+                        ". Please delete manually at: " + this.textNotes.getPath());
+        } catch (Exception e) {
+            AlertBox.showErrorAlert("There was an error deleting the notes");
+            ConsoleLog.error(e.getLocalizedMessage());
         }
     }
 
     private SecretKey getEncryptKey() throws NoSuchAlgorithmException {
-        if(encryptKey == null) { // generate new key when key upon accessing if already doesn't exist
+        if (encryptKey == null) { // generate new key when key upon accessing if already doesn't exist
             // generate encryption key
             KeyGenerator generator = KeyGenerator.getInstance(CryptoUtils.getAlgorithm());
             generator.init(128); // The AES key size in number of bits
@@ -70,31 +100,38 @@ public class Consultation implements Serializable, Comparable<Consultation>, Tab
     }
 
     // Getters and setters are mostly for the table view models
-    public List<File> getNoteImages() throws NoSuchAlgorithmException, IOException, CryptoException {
-        List<File> decryptedFiles = new ArrayList<>();
+
+    public ArrayList<File> getNoteImages() {
+        return this.noteImages;
+    }
+
+    public List<byte[]> getNoteImageBytes() throws NoSuchAlgorithmException, IOException, CryptoException {
+        List<byte[]> decryptedFiles = new ArrayList<>();
         for (File noteImage : this.noteImages) {
-            File decrypted = CryptoUtils.decrypt(this.getEncryptKey(), noteImage);
+            byte[] decrypted = CryptoUtils.getDecryptedBytes(this.getEncryptKey(), noteImage);
             decryptedFiles.add(decrypted);
         }
         return decryptedFiles;
     }
 
-    public void setNoteImages(LinkedList<File> noteImages) throws IOException {
-        LinkedList<File> tmp = new LinkedList<>();
-        File outputFolder = new File(String.format("./data/%s",this.getPatient().getUid()));
+    public void setNoteImages(ArrayList<File> noteImages) throws IOException {
+        ArrayList<File> tmp = new ArrayList<>();
+        File outputFolder = new File(String.format("./data/%s/%s", this.getPatient().getUid(), this.getConsultationUID()));
 
-        if(outputFolder.mkdirs()) ConsoleLog.info("Patient assets folder created");
+        if (outputFolder.mkdirs()) ConsoleLog.info("Patient assets folder created");
         else ConsoleLog.info("Patients assets folder already exists");
 
         for (File noteImage : noteImages) {
-            File outputFile = new File(outputFolder.getAbsolutePath() + String.format("/%s.encrypted", noteImage.getName()));
-            if(!outputFile.createNewFile()) {
-                ConsoleLog.error("A file exists in the provided path. Old file is being overwritten");
-                outputFile.delete(); // tries again to delete the file
-                if(!outputFile.createNewFile()) continue; // tries to create the file again
-            }
-
             try {
+                String fileName = noteImage.getName().endsWith(".encrypted") ? String.format("/%s",noteImage.getName()) : String.format("/%s.encrypted", noteImage.getName());
+                File outputFile = new File(outputFolder + fileName);
+                 if (!outputFile.createNewFile()) {
+                    ConsoleLog.error("A file exists in the provided path. Old file is being overwritten");
+                    outputFile.delete(); // tries again to delete the file
+                    if (!outputFile.createNewFile()) continue; // tries to create the file again
+                }
+
+
                 CryptoUtils.encrypt(this.getEncryptKey(), noteImage, outputFile);
                 tmp.add(outputFile);
             } catch (CryptoException | NoSuchAlgorithmException e) {
@@ -105,46 +142,55 @@ public class Consultation implements Serializable, Comparable<Consultation>, Tab
         this.noteImages = tmp;
     }
 
+    public void deleteUnusedAssets(ArrayList<File> newFilesList) {
+        for (File file : this.noteImages) {
+            if(!newFilesList.contains(file)) file.delete();
+        }
+    }
+
     public float getCost() {
         return cost;
     }
 
-    public void setCost(int hours) throws IllegalConsultationException {
-        final float FIRST_CONSULTATION_PRICE = 15;
-        final float CONSULTATION_PRICE = 25;
+    public void setCost(float cost) {
+        this.cost = cost;
+    }
 
-        float price = FIRST_CONSULTATION_PRICE;
-        if(this.getPatient() == null) throw new IllegalConsultationException("Patient not found");
+    public double getHourlyCost() throws IllegalConsultationException {
+        final double FIRST_CONSULTATION_PRICE = 15;
+        final double CONSULTATION_PRICE = 25;
+
+        double price = FIRST_CONSULTATION_PRICE;
+        if (this.getPatient() == null) throw new IllegalConsultationException("Patient not found");
         // Check if current consultation is the first consultation of the patient
         List<Consultation> consultations = GUIApplication.app.manager.getConsultations().stream().filter((e) -> e.getPatient().equals(this.getPatient())).collect(Collectors.toList());
 
         for (Consultation consultation : consultations) {
-            if(this.getConsultationDateTime().isAfter(consultation.getConsultationDateTime())) {
-                price = CONSULTATION_PRICE; break;
+            if (this.getConsultationDateTime().isAfter(consultation.getConsultationDateTime())) {
+                price = CONSULTATION_PRICE;
+                break;
             }
         }
-        this.cost = hours * price;
+
+        return price;
     }
 
-    public String getTextNotes() throws NoSuchAlgorithmException, IOException, CryptoException{
-        File textNotesFile = new File(String.format("./data/%s/tn.txt.encrypted",this.getPatient().getUid()));
+    public String getTextNotes() throws NoSuchAlgorithmException, IOException, CryptoException {
+        File textNotesFile = this.textNotes;
         // Decrypting the content
-        File outFile = CryptoUtils.decrypt(this.getEncryptKey(), textNotesFile);
-        FileInputStream inputStream = new FileInputStream(outFile);
-        byte[] inputBytes = new byte[(int) outFile.length()];
-        inputStream.read(inputBytes);
+        byte[] textBytes = CryptoUtils.getDecryptedBytes(this.getEncryptKey(), textNotesFile);
 
-        return new String(inputBytes);
+        return new String(textBytes);
     }
 
     public void setTextNotes(String textNotes) throws IOException, NoSuchAlgorithmException, CryptoException {
-        File textNotesFile = new File(String.format("./data/%s/tn.txt.encrypted",this.getPatient().getUid()));
-        if(!textNotesFile.exists()) {
-            textNotesFile.getParentFile().mkdirs();
-            textNotesFile.createNewFile();
+        this.textNotes = new File(String.format("./data/%s/%s/tn.txt.encrypted", this.getPatient().getUid(), this.getConsultationUID()));
+
+        if (!this.textNotes.exists()) {
+            this.textNotes.getParentFile().mkdirs();
+            this.textNotes.createNewFile();
         }
-        CryptoUtils.encrypt(this.getEncryptKey(), textNotes, textNotesFile);
-        this.textNotes = textNotesFile;
+        CryptoUtils.encrypt(this.getEncryptKey(), textNotes, this.textNotes);
     }
 
     public Patient getPatient() {
@@ -167,7 +213,8 @@ public class Consultation implements Serializable, Comparable<Consultation>, Tab
         return this.patient.getUid();
     }
 
-    public void setPatientUID(String uid) { } // just as a placeholder
+    public void setPatientUID(String uid) {
+    } // just as a placeholder
 
     public String getDoctorName() {
         return this.getDoctor().getFullName();
@@ -177,15 +224,29 @@ public class Consultation implements Serializable, Comparable<Consultation>, Tab
         return consultationDateTime;
     }
 
-    public void setConsultationDateTime(LocalDateTime localDateTime) {}
+    public void setConsultationDateTime(LocalDateTime localDateTime) {
+    }
 
-    public String getSpecialization() { return this.doctor.getSpecialization(); }
+    public String getSpecialization() {
+        return this.doctor.getSpecialization();
+    }
 
-    public void setSpecialization(String s) {}
+    public void setSpecialization(String s) {
+    }
 
-    public String getPatientName() { return this.patient.getFullName(); }
+    public String getPatientName() {
+        return this.patient.getFullName();
+    }
 
-    public void setPatientName(String name) {}
+    public void setPatientName(String name) {
+    }
+
+    public String getConsultationUID() {
+        if (consultationUID == null) {
+            consultationUID = String.format("c%5d", GUIApplication.app.manager.getConsultationIdIndex()).replace(' ', '0');
+        }
+        return consultationUID;
+    }
 
     @Override
     public int compareTo(Consultation o) {

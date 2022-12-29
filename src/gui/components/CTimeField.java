@@ -1,6 +1,5 @@
 package gui.components;
 
-import constants.Formats;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
@@ -14,8 +13,8 @@ import javafx.util.StringConverter;
 import java.time.LocalTime;
 
 public class CTimeField extends HBox {
-    private TextField hours;
-    private TextField minutes;
+    private final TextField hours;
+    private final TextField minutes;
     public CTimeField() {
         super();
         hours = new TextField();

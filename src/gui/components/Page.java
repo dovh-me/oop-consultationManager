@@ -14,7 +14,11 @@ public abstract class Page extends StackPane {
 
     public void onNavigation() {
         ConsoleLog.info("Loading " + this.getTitle() + " page...");
-    };
+    }
+
+    public void onExit() {
+        ConsoleLog.info("Navigating out of " + this.getTitle() + " page...");
+    }
 
     public Page getPrevPage() {
         return prevPage;

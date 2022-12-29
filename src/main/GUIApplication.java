@@ -8,8 +8,6 @@ import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import util.ConsoleLog;
 
-import javax.swing.text.View;
-
 public class GUIApplication extends Application{
     public static Stage primaryStage;
     public static GUIApplication app;
@@ -19,7 +17,7 @@ public class GUIApplication extends Application{
     private ViewDoctors viewDoctors;
     private ViewConsultations viewConsultations;
     private CheckAvailability checkAvailability;
-    private PatientInfo patientInfo;
+    private AddConsultation patientInfo;
     private ViewConsultation viewConsultation;
 
     private static WestminsterSkinConsultationManager mTemp;
@@ -68,7 +66,7 @@ public class GUIApplication extends Application{
         return viewConsultations;
     }
 
-    public PatientInfo getPatientInfo() {
+    public AddConsultation getPatientInfo() {
         return patientInfo;
     }
 
@@ -81,7 +79,7 @@ public class GUIApplication extends Application{
         this.viewDoctors = new ViewDoctors();
         this.checkAvailability = new CheckAvailability();
         this.viewConsultations = new ViewConsultations();
-        this.patientInfo = new PatientInfo();
+        this.patientInfo = new AddConsultation();
         this.viewConsultation = new ViewConsultation();
     }
 

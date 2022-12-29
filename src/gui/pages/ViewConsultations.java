@@ -9,7 +9,7 @@ import util.ConsoleLog;
 
 public class ViewConsultations extends Page {
     private Consultation selectedConsultation;
-    private TableWithActionButtonsPanel<Consultation> mainContentPanel;
+    private final TableWithActionButtonsPanel<Consultation> mainContentPanel;
     private Button viewConsultationButton;
     private Button cancelConsultationButton;
 
@@ -37,6 +37,7 @@ public class ViewConsultations extends Page {
             this.cancelConsultationButton = new Button("Cancel Consultation");
             this.viewConsultationButton = new Button("View Consultation");
 
+            this.cancelConsultationButton.setStyle("-fx-background-color: #f00; -fx-text-fill: #fff;");
             this.cancelConsultationButton.setDisable(true);
             this.viewConsultationButton.setDisable(true);
 
@@ -45,10 +46,11 @@ public class ViewConsultations extends Page {
                 GUIApplication.app.manager.cancelConsultation(
                         this.selectedConsultation
                 );
+                this.mainContentPanel.loadTableData(GUIApplication.app.manager.getConsultations()); // resetting the table content
             });
             this.viewConsultationButton.setOnAction(actionEvent -> {
                 ConsoleLog.info("View Consultation button clicked");
-                ViewConsultation.consultation = this.selectedConsultation;
+                ViewConsultation.consultationSimpleObjectProperty.set(this.selectedConsultation);
                 GUIApplication.app.af.navigateTo(GUIApplication.app.getViewConsultation());
             });
         } catch (Exception e) {
@@ -66,5 +68,11 @@ public class ViewConsultations extends Page {
     public void onNavigation() {
         super.onNavigation();
         mainContentPanel.loadTableData(GUIApplication.app.manager.getConsultations());
+    }
+
+    @Override
+    public void onExit() {
+        super.onExit();
+        this.mainContentPanel.getTable().getSelectionModel().clearSelection();
     }
 }

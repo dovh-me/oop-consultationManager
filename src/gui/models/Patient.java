@@ -6,6 +6,8 @@ import java.time.format.DateTimeParseException;
 import java.util.UUID;
 
 public class Patient extends Person implements Serializable {
+    public static String[] tableColumns = new String[] {"Patient UID." ,"Full Name", "Date of Birth", "Contact No."};
+    public static String[] tableFieldNames = new String[] {"uid", "fullName", "dob", "contactNo"};
     private final String uid;
 
     public Patient(String name, String surname, LocalDate dob, String contactNo) {

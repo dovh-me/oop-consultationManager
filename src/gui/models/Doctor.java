@@ -1,15 +1,14 @@
 package gui.models;
 
 import exceptions.IllegalConsultationException;
-import gui.components.TabularModel;
 
 import java.io.Serializable;
-import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
-import java.util.*;
+import java.util.List;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -34,7 +33,10 @@ public class Doctor extends Person implements Serializable {
 
     public void addConsultation(Consultation c) throws IllegalConsultationException {
         // Don't allow consultations with date times before the time at which the consultation is being created
-        if(c.getConsultationDateTime().isBefore(LocalDateTime.now())) throw new IllegalConsultationException();
+        if(c.getConsultationDateTime().isBefore(LocalDateTime.now())) {
+            String errorMessage = "Illegal operation. Consultations can only be booked for future dates and times";
+            throw new IllegalConsultationException(errorMessage);
+        }
         this.consultations.remove(c);
         this.consultations.add(c);
     }
@@ -59,6 +61,8 @@ public class Doctor extends Person implements Serializable {
     public boolean getAvailability(LocalDateTime ldt) {
         List<Consultation> consultations = this.findConsultationsByDate(LocalDate.from(ldt));
 
+        // Return false if the time slot is before the current time
+        if(LocalDateTime.now().isAfter(ldt)) return false;
         // Return false if the time slot is not within the consultation times
         if(this.consultationEnd.isBefore(LocalTime.from(ldt))) return false;
         if(this.consultationStart.isAfter(LocalTime.from(ldt))) return false;
@@ -67,7 +71,9 @@ public class Doctor extends Person implements Serializable {
         for (Consultation consultation : consultations) {
             LocalDateTime currDateTime = LocalDateTime.of(LocalDate.from(consultation.getConsultationDateTime()), LocalTime.from(consultation.getConsultationDateTime()));
             // Return false if consultation being checked is not one hour before or after the current consultation being placed
-            if(!currDateTime.isBefore(ldt.minusHours(1)) || !currDateTime.isAfter(ldt.plusHours(1))) return false;
+            if(currDateTime.isEqual(ldt)) return false;
+            if(currDateTime.isAfter(ldt) && !currDateTime.isAfter(ldt.plusHours(1))) return false;
+            if(currDateTime.isBefore(ldt) && !currDateTime.isBefore(ldt.minusHours(1))) return false;
         }
 
         return true;

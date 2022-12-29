@@ -2,15 +2,11 @@ package gui.pages;
 
 import constants.Formats;
 import gui.components.*;
-import gui.models.Consultation;
 import gui.models.Doctor;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.FlowPane;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import main.GUIApplication;
 import util.GUIValidator;
 
@@ -31,64 +27,50 @@ public class CheckAvailability extends Page {
     private Label validationMessage;
     private Button continueButton;
 
-    private final VBox mainPane;
-
     public CheckAvailability() {
-        this.mainPane = new VBox();
-        this.setMaxWidth(500);
-        initAvailabilityPanel();
-        initValidationMessage();
-        initInfoPanel();
-        initContinueButton();
+        GridPane mainPane = createGeneralGridPane();
 
+        mainPane.setVgap(10);
+        mainPane.setHgap(5);
+
+        mainPane.add(initAvailabilityInfoPane(), 0,0);
+        mainPane.add(initValidationMessage(), 0,1);
+        mainPane.add(initAvailabilityPanel(), 0,2);
+        mainPane.add(initContinueButton(), 0,3);
+        mainPane.add(initDoctorsTable(),1,0,1,3);
+
+        this.setAlignment(Pos.CENTER);
         this.getChildren().add(mainPane);
-    }
-
-    @Override
-    public String getTitle() {
-        return "Check Availability";
-    }
-
-    @Override
-    public void onNavigation() {
-        resetAvailabilityPanelFields();
-        resetInfoPanelFields();
-        super.onNavigation();
-        if(this.getPrevPage() == GUIApplication.app.getViewDoctors()) {
-            loadDoctor();
-        }
     }
 
     public void loadDoctor() {
         this.doctorMedLicNo.getInputField().setText(CheckAvailability.doctor.getMedicalLicenseNo());
     }
 
-    private void initAvailabilityPanel() {
-        BorderPane availabilityPanel = new BorderPane();
-
-        // Initialise the section title label
-        availabilityPanel.setTop(new Label("Select Doctor:"));
-
-        // Initialise the input groups
-        GridPane inputGroupsPanel = new GridPane();
-
+    private GridPane initAvailabilityPanel() {
+        GridPane availabilityPanel = createGeneralGridPane();
+        ColumnConstraints columnConstraints = new ColumnConstraints();
+        Label titleLabel = new Label("Select Doctor");
         this.consultationDate = new CDatePickerInputGroup(
-                "Consultation date time (yyyy-MM-dd HH:mm):", new GUIValidator[]{GUIValidator.NOT_NULL});
-        this.consultationDate.getInputField().setAllowedStart(LocalDate.now());
+                "Consultation date (yyyy-MM-dd):", new GUIValidator[]{GUIValidator.NOT_NULL});
         this.consultationTime = new CTimeFieldInputGroup(
-                "Consultation Time:", new GUIValidator[]{GUIValidator.NOT_NULL}
+                "Consultation Time (HH:mm):", new GUIValidator[]{GUIValidator.NOT_NULL}
         );
-
         this.doctorMedLicNo = new CTextFieldInputGroup(
-                "Doctor Medical License Number:", new GUIValidator[]{}, new GUIValidator[]{GUIValidator.NOT_EMPTY,GUIValidator.MEDICAL_LICENSE_NO});
-
-        inputGroupsPanel.add(this.consultationDate, 0,0);
-        inputGroupsPanel.add(this.consultationTime, 0,1);
-        inputGroupsPanel.add(this.doctorMedLicNo, 0, 2);
-        availabilityPanel.setCenter(inputGroupsPanel);
-        // Initialise the action buttons
+                "Medical License No:", new GUIValidator[]{}, new GUIValidator[]{GUIValidator.NOT_EMPTY,GUIValidator.MEDICAL_LICENSE_NO});
         Button checkAvailabilityButton = new Button("Check Availability");
-        checkAvailabilityButton.setStyle("-fx-background-color: #fe2c54");
+
+        titleLabel.setStyle("-fx-font-weight: bold;");
+        columnConstraints.setPercentWidth(60);
+        availabilityPanel.setStyle("-fx-padding: 10px;");
+
+        this.consultationDate.getInputField().setAllowedStart(LocalDate.now());
+        this.consultationDate.setGroupPaneColumnConstraints(columnConstraints, columnConstraints);
+        this.consultationTime.setGroupPaneColumnConstraints(columnConstraints, columnConstraints);
+        this.doctorMedLicNo.setGroupPaneColumnConstraints(columnConstraints, columnConstraints);
+
+        // Initialise the action buttons
+        checkAvailabilityButton.setStyle("-fx-background-color: #fe2c54; -fx-text-fill: white;");
         checkAvailabilityButton.setOnAction((event) -> {
             this.showValidationMessage("");
             if(!this.validateAvailabilityPanelInput()) {showValidationMessage("Invalid inputs. Availability not checked");return;}
@@ -116,26 +98,30 @@ public class CheckAvailability extends Page {
             CheckAvailability.consultationDateTime = consultationDateTime;
         });
 
-        checkAvailabilityButton.setAlignment(Pos.CENTER_RIGHT);
-        availabilityPanel.setBottom(checkAvailabilityButton);
+        availabilityPanel.add(titleLabel,0,0,2,1);
+        availabilityPanel.add(this.consultationDate, 0,1);
+        availabilityPanel.add(this.consultationTime, 0,2);
+        availabilityPanel.add(this.doctorMedLicNo, 0, 3);
+        availabilityPanel.add(checkAvailabilityButton, 0,4,2,1);
 
-        this.mainPane.getChildren().add(availabilityPanel);
+        return availabilityPanel;
     }
 
-    private void initValidationMessage() {
+    private Label initValidationMessage() {
         this.validationMessage = new Label("Default validation message");
         this.validationMessage.setStyle("-fx-text-fill: #f00");
-        this.mainPane.getChildren().add(this.validationMessage);
         this.validationMessage.setVisible(false);
+        return this.validationMessage;
     }
 
-    private void initInfoPanel() {
+    private GridPane initAvailabilityInfoPane() {
         this.infoPanelLabels = new ArrayList<>();
         this.infoPanelLabels.add(new Label("default availability"));
         this.infoPanelLabels.add(new Label("default doctor name"));
         this.infoPanelLabels.add(new Label("default specialisation"));
 
-        GridPane infoPanel = new GridPane();
+        GridPane infoPanel = createGeneralGridPane();
+        infoPanel.setAlignment(Pos.CENTER);
         infoPanel.setVgap(10);
         infoPanel.setHgap(10);
         infoPanel.add(new Label("Availability:"), 0,0);
@@ -145,15 +131,25 @@ public class CheckAvailability extends Page {
         infoPanel.add(new Label("Specialisation"), 0, 2);
         infoPanel.add(this.infoPanelLabels.get(2), 1, 2);
 
-        this.mainPane.getChildren().add(infoPanel);
+        return infoPanel;
     }
 
-    private void initContinueButton() {
+    private DoctorsTable initDoctorsTable() {
+        DoctorsTable doctorsTable = new DoctorsTable();
+        doctorsTable.repopulateTable();
+        doctorsTable.setActionButtonOnClickListener((event) -> {
+            this.continueButton.setDisable(true);
+            this.loadDoctor();
+        });
+        return doctorsTable;
+    }
+
+    private FlowPane initContinueButton() {
         FlowPane pane = new FlowPane();
         pane.setAlignment(Pos.CENTER_RIGHT);
         pane.setMinWidth(Double.MIN_VALUE);
         // Add the Enter patient info button
-        this.continueButton = new Button("Continue >");
+        this.continueButton = new Button("Continue");
         this.continueButton.setDisable(true);
 
         this.continueButton.setOnAction((event -> {
@@ -165,23 +161,23 @@ public class CheckAvailability extends Page {
         }));
 
         pane.getChildren().add(this.continueButton);
-        this.mainPane.getChildren().add(pane);
+        return pane;
     }
 
     private void loadInfoPanelData(boolean isAvailable, Doctor doctor) {
         if(isAvailable){
             this.infoPanelLabels.get(0).setText("Available");
-            this.infoPanelLabels.get(0).setStyle("-fx-text-fill: #0f0");
+            this.infoPanelLabels.get(0).setStyle("-fx-background-radius: 5px; -fx-padding: 3px;-fx-font-weight: bold;-fx-text-fill: #ffffff; -fx-background-color: #0a7a3b");
         } else {
             this.infoPanelLabels.get(0).setText("Unavailable");
-            this.infoPanelLabels.get(0).setStyle("-fx-text-fill: #f00");
+            this.infoPanelLabels.get(0).setStyle("-fx-background-radius: 5px; -fx-padding: 3px;-fx-font-weight: bold;-fx-text-fill: #ffffff; -fx-background-color: #c41826");
         }
         this.infoPanelLabels.get(1).setText(doctor.getFullName());
         this.infoPanelLabels.get(2).setText(doctor.getSpecialization());
     }
 
     private void resetInfoPanelFields() {
-        this.infoPanelLabels.get(0).setStyle("-fx-text-fill: #000");
+        this.infoPanelLabels.get(0).setStyle("-fx-text-fill: #000; -fx-background-color: transparent;");
         for (Label infoPanelLabel : infoPanelLabels) {
             infoPanelLabel.setText("--");
         }
@@ -204,11 +200,38 @@ public class CheckAvailability extends Page {
     }
 
     private boolean validateAvailabilityPanelInput() {
+        // TODO: validate the consultation date time, to be only possible for future
         boolean isValid;
         isValid = this.doctorMedLicNo.validateInput();
         isValid = this.consultationDate.validateInput() & isValid;
         isValid = this.consultationTime.validateInput() & isValid;
         return isValid;
+    }
+
+    private GridPane createGeneralGridPane() {
+        GridPane pane = new GridPane();
+        ColumnConstraints columnConstraints = new ColumnConstraints();
+        columnConstraints.setPercentWidth(50);
+        pane.getColumnConstraints().addAll(columnConstraints, columnConstraints);
+        pane.setStyle("-fx-padding: 10px;");
+        pane.setVgap(10);
+
+        return pane;
+    }
+
+    @Override
+    public String getTitle() {
+        return "Check Availability";
+    }
+
+    @Override
+    public void onNavigation() {
+        resetAvailabilityPanelFields();
+        resetInfoPanelFields();
+        super.onNavigation();
+        if(this.getPrevPage() == GUIApplication.app.getViewDoctors()) {
+            loadDoctor();
+        }
     }
 }
 

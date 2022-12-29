@@ -8,6 +8,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
+import main.GUIApplication;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -59,16 +60,19 @@ public class ApplicationRoot extends BorderPane {
 
     public void navigateToPrev() {
         this.activePage.setVisible(false);
+        this.activePage.onExit();
         Page prevPage = this.activePage.getPrevPage();
         this.setActivePage(prevPage);
         if(prevPage != null) prevPage.setVisible(true);
         this.activePage.onNavigation();
         contentPanel.setCenter(this.activePage);
+        applicationTitle.setText(this.activePage.getTitle());
     }
 
     public void navigateTo(Page pageToNavigate) {
         Page currentPage = this.activePage;
         this.activePage.setVisible(false);
+        this.activePage.onExit();
         pageToNavigate.setPrevPage(currentPage);
         this.setActivePage(pageToNavigate);
         this.activePage.onNavigation();
@@ -94,10 +98,16 @@ public class ApplicationRoot extends BorderPane {
         backNavigationButton.setGraphic(new ImageView(new Image("/assets/back-arrow.png")));
         backNavigationButton.setOnAction(e -> navigateToPrev());
 
+        Button closeButton = new Button("X");
+        closeButton.setStyle("-fx-background-color: #f00;-fx-text-fill: white; -fx-font-weight: bold;");
+        closeButton.setMaxSize(15,15);
+        closeButton.setOnAction((event -> GUIApplication.primaryStage.close()));
+
         applicationTitle.setAlignment(Pos.CENTER);
 
         headerPanel.setCenter(applicationTitle);
         headerPanel.setLeft(backNavigationButton);
+        headerPanel.setRight(closeButton);
         this.setTop(headerPanel);
     }
 

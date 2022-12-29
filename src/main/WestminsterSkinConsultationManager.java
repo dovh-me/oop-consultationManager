@@ -15,10 +15,14 @@ import java.util.stream.Collectors;
 public class WestminsterSkinConsultationManager implements SkinConsultationManager, Serializable {
     private ArrayList<Doctor> doctors;
     private ArrayList<Consultation> consultations;
+    private ArrayList<Patient> patients;
+    private int consultationIdIndex;
 
     public WestminsterSkinConsultationManager() {
         this.doctors = new ArrayList<>(10);
         this.consultations = new ArrayList<>();
+        this.patients = new ArrayList<>();
+        this.consultationIdIndex = 1;
     }
 
     private void printMainMenu() {
@@ -125,6 +129,7 @@ public class WestminsterSkinConsultationManager implements SkinConsultationManag
         ConsoleLog.success(String.format("Doctor with license number %s has " +
                 "been " +
                 "removed from the system!", medLicense));
+        ConsoleLog.info(String.format("No. of available doctors in the system: %d",this.getDoctors().size()));
     }
 
     @Override
@@ -132,7 +137,7 @@ public class WestminsterSkinConsultationManager implements SkinConsultationManag
         List<Doctor> availableDoctors =  this.doctors.stream().filter(doctor -> doctor.getSpecialization().equals(specialization) && doctor.getAvailability(dateTime)).collect(Collectors.toList());
         if(availableDoctors.isEmpty()) return null;
         // Generate a random integer to select the doctor
-        int randomIndex = (int) Math.round(Math.random() * availableDoctors.size());
+        int randomIndex = (int) Math.round(Math.random() * (availableDoctors.size() - 1));
         return availableDoctors.get(randomIndex);
     }
 
@@ -157,6 +162,10 @@ public class WestminsterSkinConsultationManager implements SkinConsultationManag
         ct.print();
     }
 
+    public void addPatient(Patient patientToAdd) {
+        this.patients.add(patientToAdd);
+    }
+
     @Override
     public void addConsultation(Consultation consultation) {
         try {
@@ -169,7 +178,7 @@ public class WestminsterSkinConsultationManager implements SkinConsultationManag
             ));
 
         } catch (IllegalConsultationException e) {
-            AlertBox.showErrorAlert("Illegal operation: No more consultations allowed for the doctor being booked. Please select a different doctor");
+            AlertBox.showErrorAlert(e.getLocalizedMessage());
         } catch (Exception e) {
             AlertBox.showErrorAlert("Unexpected error occurred. Please try again! Report an issue if error persists");
             e.printStackTrace();
@@ -222,13 +231,12 @@ public class WestminsterSkinConsultationManager implements SkinConsultationManag
 
     public void launchGUI() {
         GUIApplication.start(this);
-        System.out.println("GUI application started!!");
     }
 
     public void saveToFile() {
         try (
                 FileOutputStream fileOut = new FileOutputStream("./data/consultationManager.ser");
-                ObjectOutputStream out = new ObjectOutputStream(fileOut)
+                ObjectOutputStream out = new ObjectOutputStream(fileOut);
         ) {
             out.writeObject(this);
             ConsoleLog.success("Serialized data is saved in /data/consultationManager.ser");
@@ -245,6 +253,8 @@ public class WestminsterSkinConsultationManager implements SkinConsultationManag
             WestminsterSkinConsultationManager oldState = (WestminsterSkinConsultationManager) in.readObject();
             this.doctors = oldState.doctors;
             this.consultations = oldState.consultations;
+            this.patients = oldState.patients;
+            this.consultationIdIndex = oldState.consultationIdIndex; // directly accessing the property since otherwise the index will increment
 
             ConsoleLog.success("Deserialized data loaded from /data/consultationManager.ser");
         } catch (IOException i) {
@@ -271,6 +281,19 @@ public class WestminsterSkinConsultationManager implements SkinConsultationManag
         this.consultations = consultations;
     }
 
+    public ArrayList<Patient> getPatients() {
+        return patients;
+    }
+
+    public void setPatients(ArrayList<Patient> patients) {
+        this.patients = patients;
+    }
+
+    public int getConsultationIdIndex() {
+        // auto increments upon returning
+        return consultationIdIndex++;
+    }
+
     public void start() {
         String promptMessage = "Please enter the letter of the action you want to perform: ";
         String mainMenuInput;
@@ -281,7 +304,7 @@ public class WestminsterSkinConsultationManager implements SkinConsultationManag
             mainMenuInput = InputPrompter.promptValidatedString(promptMessage, new Validator<String>() {
                 @Override
                 public boolean validate(String input) {
-                    ArrayList<String> allowed = new ArrayList<>(Arrays.asList("A", "D", "V", "AC", "VC", "CC", "S", "L", "G", "Q"));
+                    ArrayList<String> allowed = new ArrayList<>(Arrays.asList("A", "D", "V","VC", "S", "L", "G", "Q"));
                     return allowed.contains(input.toUpperCase());
                 }
             });
