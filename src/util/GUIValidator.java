@@ -37,14 +37,7 @@ public abstract class GUIValidator <T>{
         }
     };
 
-    public static final GUIValidator<String> DATE_TIME_STRING = new GUIValidator<String>("Invalid date time string (yyyy-MM-dd HH:mm).") {
-        @Override
-        public boolean validate(String input) {
-            return Validator.DATE_TIME_STRING.validate(input);
-        }
-    };
-
-    public static final GUIValidator NOT_NULL = new GUIValidator("A value is required for this field") {
+    public static final GUIValidator<Object> NOT_NULL = new GUIValidator<Object>("A value is required for this field") {
         @Override
         public boolean validate(Object input) {
             return input != null;

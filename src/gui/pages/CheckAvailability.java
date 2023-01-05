@@ -44,7 +44,7 @@ public class CheckAvailability extends Page {
     }
 
     public void loadDoctor() {
-        this.doctorMedLicNo.getInputField().setText(CheckAvailability.doctor.getMedicalLicenseNo());
+        this.doctorMedLicNo.getInputField().setText(CheckAvailability.doctor.getMedicalLicenceNo());
     }
 
     private GridPane initAvailabilityPanel() {
@@ -57,7 +57,7 @@ public class CheckAvailability extends Page {
                 "Consultation Time (HH:mm):", new GUIValidator[]{GUIValidator.NOT_NULL}
         );
         this.doctorMedLicNo = new CTextFieldInputGroup(
-                "Medical License No:", new GUIValidator[]{}, new GUIValidator[]{GUIValidator.NOT_EMPTY,GUIValidator.MEDICAL_LICENSE_NO});
+                "Medical Licence No:", new GUIValidator[]{}, new GUIValidator[]{GUIValidator.NOT_EMPTY,GUIValidator.MEDICAL_LICENSE_NO});
         Button checkAvailabilityButton = new Button("Check Availability");
 
         titleLabel.setStyle("-fx-font-weight: bold;");
@@ -77,7 +77,7 @@ public class CheckAvailability extends Page {
 
             Optional<Doctor> optional = GUIApplication.app.manager.findDoctor(this.doctorMedLicNo.getInput());
             if(!optional.isPresent()) {
-                showValidationMessage("Medical license number not found in the system. Please check again");
+                showValidationMessage("Medical licence number not found in the system. Please check again");
                 return;
             }
             Doctor doctor = optional.get();
@@ -137,10 +137,13 @@ public class CheckAvailability extends Page {
     private DoctorsTable initDoctorsTable() {
         DoctorsTable doctorsTable = new DoctorsTable();
         doctorsTable.repopulateTable();
-        doctorsTable.setActionButtonOnClickListener((event) -> {
+        doctorsTable.setTableRowSelectionListener((observableValue,oldValue, newValue) -> {
+            if(newValue == null) return;
+            CheckAvailability.doctor = newValue;
             this.continueButton.setDisable(true);
             this.loadDoctor();
         });
+
         return doctorsTable;
     }
 

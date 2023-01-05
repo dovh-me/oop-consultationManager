@@ -31,7 +31,7 @@ public class ViewConsultation extends Page {
         GridPane mainPane = createGeneralGridPane();
         mainPane.setVgap(10);
         mainPane.setHgap(5);
-        mainPane.setStyle("-fx-padding: 5px;");
+        mainPane.setStyle("-fx-padding: 10px;");
 
         mainPane.add(initPatientPane(),0,0);
         mainPane.add(initDoctorPane(),1,0);
@@ -63,7 +63,7 @@ public class ViewConsultation extends Page {
             }
             Doctor d = newValue.getDoctor();
             doctorName.setText("Dr. " + d.getFullName());
-            medicalLicense.setText(d.getMedicalLicenseNo());
+            medicalLicense.setText(d.getMedicalLicenceNo());
             specialisation.setText(d.getSpecialization());
 
         });

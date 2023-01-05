@@ -94,6 +94,7 @@ public class GUIApplication extends Application{
         primaryStage.setScene(new Scene(root, 800, 800));
         primaryStage.setAlwaysOnTop(true);
         primaryStage.setFullScreen(true);
+        primaryStage.setFullScreenExitHint("");
         primaryStage.show();
 
         root.getChildren().add(af);

@@ -54,9 +54,6 @@ public class WestminsterSkinConsultationManager implements SkinConsultationManag
             case "V":
                 viewDoctors();
                 break;
-            case "VC":
-                viewConsultations();
-                break;
             case "S":
                 saveToFile();
                 break;
@@ -81,8 +78,8 @@ public class WestminsterSkinConsultationManager implements SkinConsultationManag
         return new String[]{name, surname, dob, contactNo};
     }
 
-    public Optional<Doctor> findDoctor(String medLicense) {
-        return this.doctors.stream().filter((Doctor d) -> d.getMedicalLicenseNo().equals(medLicense)).findFirst();
+    public Optional<Doctor> findDoctor(String medLicence) {
+        return this.doctors.stream().filter((Doctor d) -> d.getMedicalLicenceNo().equals(medLicence)).findFirst();
     }
 
     @Override
@@ -95,12 +92,12 @@ public class WestminsterSkinConsultationManager implements SkinConsultationManag
 
             ConsoleLog.logWithColors(ConsoleColors.GREEN_BOLD_BRIGHT, "Adding doctor...");
             String[] pData = this.promptPerson();
-            String medLicense = InputPrompter.promptValidatedString("Enter medical license number: ", Validator.MEDICAL_LICENSE_NO_STRING);
+            String medLicence = InputPrompter.promptValidatedString("Enter medical licence number: ", Validator.MEDICAL_LICENSE_NO_STRING);
             String specialization = InputPrompter.promptString("Enter specialization: ");
 
-            this.doctors.add(new Doctor(pData[0], pData[1], pData[2], pData[3], medLicense, specialization));
+            this.doctors.add(new Doctor(pData[0], pData[1], pData[2], pData[3], medLicence, specialization));
 
-            ConsoleLog.logWithColors(ConsoleColors.GREEN, String.format("New doctor added successfully! Med License No: %s", medLicense));
+            ConsoleLog.logWithColors(ConsoleColors.GREEN, String.format("New doctor was added successfully! Med Licence No: %s", medLicence));
         } catch (NoSuchElementException e) {
             ConsoleLog.error("There was an error capturing input");
             e.printStackTrace();
@@ -115,8 +112,8 @@ public class WestminsterSkinConsultationManager implements SkinConsultationManag
     @Override
     public void removeDoctor() {
         ConsoleLog.logWithColors(ConsoleColors.RED_BOLD_BRIGHT, "Deleting doctor...");
-        String medLicense = InputPrompter.promptValidatedString("Enter medical license number: ", Validator.MEDICAL_LICENSE_NO_STRING);
-        Object[] doctorsToRemove = this.doctors.stream().filter((Doctor d) -> d.getMedicalLicenseNo().equals(medLicense)).toArray();
+        String medLicence = InputPrompter.promptValidatedString("Enter medical licence number: ", Validator.MEDICAL_LICENSE_NO_STRING);
+        Object[] doctorsToRemove = this.doctors.stream().filter((Doctor d) -> d.getMedicalLicenceNo().equals(medLicence)).toArray();
         for (Object doctor : doctorsToRemove) {
             Doctor d = (Doctor) doctor;
             if(!d.getConsultations().isEmpty()) {
@@ -126,9 +123,9 @@ public class WestminsterSkinConsultationManager implements SkinConsultationManag
             }
             this.doctors.remove(doctor);
         }
-        ConsoleLog.success(String.format("Doctor with license number %s has " +
+        ConsoleLog.success(String.format("Doctor with licence number %s has " +
                 "been " +
-                "removed from the system!", medLicense));
+                "removed from the system!", medLicence));
         ConsoleLog.info(String.format("No. of available doctors in the system: %d",this.getDoctors().size()));
     }
 
@@ -155,11 +152,15 @@ public class WestminsterSkinConsultationManager implements SkinConsultationManag
         CommandLineTable ct = new CommandLineTable();
         ct.setShowVerticalLines(true);
         ct.setRightAlign(false);
-        ct.setHeaders("Medical License No.", "Name", "Surname", "Date of Birth", "Contact No.", "Specialization");
+        ct.setHeaders("Medical Licence No.", "Name", "Surname", "Date of Birth", "Contact No.", "Specialization");
         for (Doctor d : doctors) {
-            ct.addRow(d.getMedicalLicenseNo(), d.getName(), d.getSurname(), d.getDob().toString(), d.getContactNo(), d.getSpecialization());
+            ct.addRow(d.getMedicalLicenceNo(), d.getName(), d.getSurname(), d.getDob().toString(), d.getContactNo(), d.getSpecialization());
         }
         ct.print();
+    }
+
+    public void launchGUI() {
+        GUIApplication.start(this);
     }
 
     public void addPatient(Patient patientToAdd) {
@@ -186,51 +187,20 @@ public class WestminsterSkinConsultationManager implements SkinConsultationManag
     }
 
     @Override
-    public void updateConsultation() {
-
-    }
-
-    @Override
-    public void cancelConsultation(Consultation consultation){
-        if(consultation == null) return;
+    public void cancelConsultation(Consultation consultation) {
+        if (consultation == null) return;
         boolean shouldCancel = AlertBox.showConfirmationAlert(String.format("Are you sure you want to " +
                 "cancel the consultation of patient %s?", consultation.getPatient().getUid()));
 
         if (!shouldCancel) {
             AlertBox.showWarningAlert(String.format("Consultation of patient %s will not be cancelled!", consultation.getPatient().getUid()));
-        }
-        else {
+        } else {
             ConsoleLog.success(String.format("Consultation of patient %s has been successfully cancelled!", consultation.getPatient().getUid()));
             this.consultations.remove(consultation);
             consultation.getDoctor().getConsultations().remove(consultation);
             // clear asset files if any available
             consultation.clearAssets();
         }
-    }
-
-    @Override
-    public void viewConsultations() {
-        if (this.consultations.isEmpty()) {
-            ConsoleLog.info("No consultation recorded in the system at the moment...");
-            return;
-        }
-
-        ConsoleLog.logWithColors(ConsoleColors.CYAN_BOLD_BRIGHT, "Viewing consultations...");
-
-        CommandLineTable ct = new CommandLineTable();
-        ct.setShowVerticalLines(true);
-        ct.setRightAlign(false);
-        ct.setHeaders("Approx. Date Time", "Patient UID", "Patient Name", "Patient Contact No.",
-                "Doctor", "Specialization", "Medical License No.");
-        for (Consultation c : consultations) {
-            ct.addRow(c.getConsultationDateTime().format(Formats.DATE_TIME_OUTPUT_FORMAT), c.getPatient().getUid(),
-                    c.getPatient().getName() + " " + c.getPatient().getSurname(), c.getPatient().getContactNo(), "Dr." + c.getDoctor().getName() + " " + c.getDoctor().getSurname(), c.getDoctor().getSpecialization(), c.getDoctor().getMedicalLicenseNo());
-        }
-        ct.print();
-    }
-
-    public void launchGUI() {
-        GUIApplication.start(this);
     }
 
     public void saveToFile() {

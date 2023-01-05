@@ -13,9 +13,9 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class Doctor extends Person implements Serializable {
-    public static String[] tableColumns = new String[] {"Medical License No." ,"Full Name", "Specialisation", "Contact No."};
-    public static String[] tableFieldNames = new String[] {"medicalLicenseNo", "fullName", "specialization", "contactNo"};
-    private String medicalLicenseNo;
+    public static String[] tableColumns = new String[] {"Medical Licence No." ,"Full Name", "Specialisation", "Contact No."};
+    public static String[] tableFieldNames = new String[] {"medicalLicenceNo", "fullName", "specialization", "contactNo"};
+    private String medicalLicenceNo;
     private String specialization;
     private TreeSet<Consultation> consultations = new TreeSet<>();
     private LocalTime consultationStart = LocalTime.of(8,0);
@@ -25,9 +25,9 @@ public class Doctor extends Person implements Serializable {
         super(name, surname, dob, contactNo);
     }
 
-    public Doctor(String name, String surname, String dob, String contactNo, String medicalLicenseNo, String specialization) throws DateTimeParseException {
+    public Doctor(String name, String surname, String dob, String contactNo, String medicalLicenceNo, String specialization) throws DateTimeParseException {
         super(name, surname, dob, contactNo);
-        this.medicalLicenseNo = medicalLicenseNo;
+        this.medicalLicenceNo = medicalLicenceNo;
         this.specialization = specialization;
     }
 
@@ -80,12 +80,12 @@ public class Doctor extends Person implements Serializable {
     }
 
     // Getters and setters are mostly for table view models
-    public String getMedicalLicenseNo() {
-        return medicalLicenseNo;
+    public String getMedicalLicenceNo() {
+        return medicalLicenceNo;
     }
 
-    public void setMedicalLicenseNo(String medicalLicenseNo) {
-        this.medicalLicenseNo = medicalLicenseNo;
+    public void setMedicalLicenceNo(String medicalLicenceNo) {
+        this.medicalLicenceNo = medicalLicenceNo;
     }
 
     public String getSpecialization() {

@@ -21,15 +21,13 @@ import java.util.ArrayList;
 
 public class CSelectImageNotes extends VBox {
     private final ObservableList<File> selectedFiles;
-    private final Label validationMessage;
-    private final Button selectFileButton;
     private final VBox recordPane;
 
     public CSelectImageNotes() {
         FileChooser fileChooser = configFileChooser();
         this.selectedFiles = FXCollections.observableList(new ArrayList<>());
-        this.validationMessage = new Label();
-        this.selectFileButton = new Button("Select File");
+        Label validationMessage = new Label();
+        Button selectFileButton = new Button("Select File");
         this.recordPane = new VBox();
         ScrollPane scrollWrapper = new ScrollPane();
         scrollWrapper.setVmax(180);
@@ -56,7 +54,7 @@ public class CSelectImageNotes extends VBox {
                 handleFileChoose(fileChooser.showOpenDialog(new Stage()));
             });
         } catch (Exception e) {
-            this.validationMessage.setText("There was an error selecting the file");
+            validationMessage.setText("There was an error selecting the file");
             ConsoleLog.error("There was an exception selecting image note");
             e.printStackTrace();
         }
@@ -72,8 +70,9 @@ public class CSelectImageNotes extends VBox {
         GridPane pane = new GridPane();
 
         removeRecordButton.setOnAction((event) -> {
+            System.out.println("Closing event triggered");
             selectedFiles.remove(file);
-            this.getChildren().remove(pane);
+            this.recordPane.getChildren().remove(pane);
         });
 
         //layout

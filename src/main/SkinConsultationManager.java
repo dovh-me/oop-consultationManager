@@ -4,7 +4,6 @@ import gui.models.Consultation;
 import gui.models.Doctor;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 public interface SkinConsultationManager {
     void addDoctor();
@@ -14,7 +13,5 @@ public interface SkinConsultationManager {
     void viewDoctors();
 
     void addConsultation(Consultation consultation);
-    void updateConsultation();
     void cancelConsultation(Consultation consultation);
-    void viewConsultations();
 }

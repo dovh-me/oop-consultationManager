@@ -31,7 +31,6 @@ public abstract class Validator<T> {
             try {
                 LocalDate.parse(input, Formats.DATE_FORMATTER);
             } catch (DateTimeParseException e) {
-                e.printStackTrace();
                 ConsoleLog.error("Invalid date format");
                 return false;
             }

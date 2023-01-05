@@ -75,7 +75,7 @@ public class AddConsultation extends Page {
         // Add doctor fields
         pane.add(titleLabel,0,0,2,1);
         pane.addRow(1,new Label("Doctor Name: "), doctorName);
-        pane.addRow(2, new Label("Medical License No: "), medLicNo);
+        pane.addRow(2, new Label("Medical Licence No: "), medLicNo);
 
         AddConsultation.doctorProperty.addListener((observable, oldValue, newValue) -> {
             if(newValue == null) {
@@ -85,7 +85,7 @@ public class AddConsultation extends Page {
             }
 
             doctorName.setText(newValue.getFullName());
-            medLicNo.setText(newValue.getMedicalLicenseNo());
+            medLicNo.setText(newValue.getMedicalLicenceNo());
 
         });
 

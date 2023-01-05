@@ -18,14 +18,14 @@ import java.util.List;
 
 public class PatientsTable extends StackPane {
     private final TableWithActionButtonsPanel<Patient> mainContentPanel;
-    private final Button selectDoctorButton;
+    private final Button addPatientButton;
 
     public PatientsTable() {
         BorderPane borderPane = new BorderPane();
 
         TextField searchBar = initSearchbar();
-        this.selectDoctorButton = initActionButtons();
-        this.mainContentPanel = new TableWithActionButtonsPanel<>(Patient.tableFieldNames, Patient.tableColumns, GUIApplication.app.manager.getPatients(), selectDoctorButton);
+        this.addPatientButton = initActionButtons();
+        this.mainContentPanel = new TableWithActionButtonsPanel<>(Patient.tableFieldNames, Patient.tableColumns, GUIApplication.app.manager.getPatients(), addPatientButton);
         borderPane.setTop(searchBar);
         borderPane.setCenter(mainContentPanel);
         this.getChildren().add(borderPane);
@@ -65,7 +65,7 @@ public class PatientsTable extends StackPane {
     }
 
     public void setActionButtonOnClickListener(EventHandler<ActionEvent> listener) {
-        this.selectDoctorButton.setOnAction(listener);
+        this.addPatientButton.setOnAction(listener);
     }
 
     public void setTableRowSelectionListener(ChangeListener<Patient> listener) {
