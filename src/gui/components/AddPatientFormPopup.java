@@ -1,6 +1,6 @@
 package gui.components;
 
-import gui.models.Patient;
+import models.Patient;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;

@@ -1,7 +1,7 @@
 package gui.components;
 
 import gui.components.layouts.TableWithActionButtonsPanel;
-import gui.models.Patient;
+import models.Patient;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.transformation.FilteredList;

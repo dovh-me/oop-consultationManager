@@ -1,4 +1,4 @@
-package gui.models;
+package models;
 
 import exceptions.IllegalConsultationException;
 
@@ -111,5 +111,13 @@ public class Doctor extends Person implements Serializable {
 
     public void setConsultationStart(LocalTime consultationStart) {
         this.consultationStart = consultationStart;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if(obj instanceof Doctor) {
+            return ((Doctor) obj).getMedicalLicenceNo().equals(this.getMedicalLicenceNo());
+        }
+        return super.equals(obj);
     }
 }

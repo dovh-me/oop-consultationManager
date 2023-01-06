@@ -2,7 +2,7 @@ package gui.pages;
 
 import constants.Formats;
 import gui.components.*;
-import gui.models.Doctor;
+import models.Doctor;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -72,12 +72,12 @@ public class CheckAvailability extends Page {
         // Initialise the action buttons
         checkAvailabilityButton.setStyle("-fx-background-color: #fe2c54; -fx-text-fill: white;");
         checkAvailabilityButton.setOnAction((event) -> {
-            this.showValidationMessage("");
-            if(!this.validateAvailabilityPanelInput()) {showValidationMessage("Invalid inputs. Availability not checked");return;}
+            this.showValidationMessage("", "-fx-background-color: red;");
+            if(!this.validateAvailabilityPanelInput()) {showValidationMessage("Invalid inputs. Availability not checked", "-fx-text-fill: red");return;}
 
             Optional<Doctor> optional = GUIApplication.app.manager.findDoctor(this.doctorMedLicNo.getInput());
             if(!optional.isPresent()) {
-                showValidationMessage("Medical licence number not found in the system. Please check again");
+                showValidationMessage("Medical licence number not found in the system. Please check again", "-fx-text-fill: red");
                 return;
             }
             Doctor doctor = optional.get();
@@ -86,10 +86,12 @@ public class CheckAvailability extends Page {
             if(!doctor.getAvailability(consultationDateTime)){
                 doctor = GUIApplication.app.manager.getAvailableDoctor(optional.get().getSpecialization(), consultationDateTime);
                 if(doctor == null) {
-                    showValidationMessage("No doctors available for the selected date time: " + consultationDateTime.format(Formats.DATE_TIME_OUTPUT_FORMAT));
+                    showValidationMessage("No doctors available for the selected date time: " + consultationDateTime.format(Formats.DATE_TIME_OUTPUT_FORMAT), "-fx-text-fill: red");
                     loadInfoPanelData(false, optional.get());
                     CheckAvailability.doctor = null;
                     return;
+                } else {
+                    showValidationMessage(String.format("Selected doctor not available: %s. System has selected a available doctor", doctorMedLicNo), "-fx-text-fill: blue;");
                 }
             }
             loadInfoPanelData(true, doctor);
@@ -109,7 +111,7 @@ public class CheckAvailability extends Page {
 
     private Label initValidationMessage() {
         this.validationMessage = new Label("Default validation message");
-        this.validationMessage.setStyle("-fx-text-fill: #f00");
+        this.validationMessage.setStyle("-fx-text-fill: red");
         this.validationMessage.setVisible(false);
         return this.validationMessage;
     }
@@ -197,7 +199,8 @@ public class CheckAvailability extends Page {
         this.consultationTime.getInputField().resetValue();
     }
 
-    private void showValidationMessage(String message) {
+    private void showValidationMessage(String message, String messageStyles) {
+        this.validationMessage.setStyle(messageStyles);
         this.validationMessage.setText(message);
         this.validationMessage.setVisible(true);
     }

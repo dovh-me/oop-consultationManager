@@ -1,6 +1,5 @@
-package gui.models;
+package models;
 
-import constants.Formats;
 import gui.components.TabularModel;
 
 import java.io.Serializable;

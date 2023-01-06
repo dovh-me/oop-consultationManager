@@ -1,4 +1,4 @@
-package gui.models;
+package models;
 
 import constants.Formats;
 import exceptions.CryptoException;

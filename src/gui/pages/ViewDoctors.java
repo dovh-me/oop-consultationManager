@@ -2,7 +2,7 @@ package gui.pages;
 
 import gui.components.Page;
 import gui.components.layouts.TableWithActionButtonsPanel;
-import gui.models.Doctor;
+import models.Doctor;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.layout.FlowPane;

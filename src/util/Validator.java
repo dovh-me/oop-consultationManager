@@ -21,7 +21,7 @@ public abstract class Validator<T> {
     public static final Validator<String> PHONE_NUMBER_STRING = new Validator<String>() {
         @Override
         public boolean validate(String input) {
-            return input.matches(RegExp.RegExp_NUMBER_STRING);
+            return input.matches(RegExp.RegExp_NUMBER_STRING) && input.length() == 10;
         }
     };
 

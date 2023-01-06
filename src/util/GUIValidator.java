@@ -47,7 +47,7 @@ public abstract class GUIValidator <T>{
     public static final GUIValidator<String> PHONE_NUMBER = new GUIValidator<String>("Invalid Phone number") {
         @Override
         public boolean validate(String input) {
-            return Validator.PHONE_NUMBER_STRING.validate(input) && input.length() == 10;
+            return Validator.PHONE_NUMBER_STRING.validate(input);
         }
     };
 

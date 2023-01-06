@@ -3,7 +3,7 @@ package gui.components;
 import constants.Formats;
 import exceptions.CryptoException;
 import exceptions.IllegalConsultationException;
-import gui.models.Consultation;
+import models.Consultation;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;

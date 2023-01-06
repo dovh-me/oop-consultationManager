@@ -1,7 +1,7 @@
 package main;
 
-import gui.models.Consultation;
-import gui.models.Doctor;
+import models.Consultation;
+import models.Doctor;
 
 import java.time.LocalDateTime;
 

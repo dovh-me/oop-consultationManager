@@ -1,6 +1,6 @@
 package util;
 
-import gui.models.Doctor;
+import models.Doctor;
 
 import java.util.Comparator;
 

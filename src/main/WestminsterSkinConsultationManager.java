@@ -2,9 +2,10 @@ package main;
 
 import constants.Formats;
 import exceptions.IllegalConsultationException;
-import gui.models.Consultation;
-import gui.models.Doctor;
-import gui.models.Patient;
+import exceptions.IllegalDoctorException;
+import models.Consultation;
+import models.Doctor;
+import models.Patient;
 import util.*;
 
 import java.io.*;
@@ -38,7 +39,6 @@ public class WestminsterSkinConsultationManager implements SkinConsultationManag
         st.addRow("Load from File", "L/l");
         st.addRow("Launch in GUI", "G/g");
         st.addRow("--", "--");
-        st.addRow("View Consultations", "VC/vc");
         st.addRow("Quit", "Q/q");
         st.print();
     }
@@ -95,12 +95,16 @@ public class WestminsterSkinConsultationManager implements SkinConsultationManag
             String medLicence = InputPrompter.promptValidatedString("Enter medical licence number: ", Validator.MEDICAL_LICENSE_NO_STRING);
             String specialization = InputPrompter.promptString("Enter specialization: ");
 
-            this.doctors.add(new Doctor(pData[0], pData[1], pData[2], pData[3], medLicence, specialization));
+            Doctor doctorToAdd = new Doctor(pData[0], pData[1], pData[2], pData[3], medLicence, specialization);
 
-            ConsoleLog.logWithColors(ConsoleColors.GREEN, String.format("New doctor was added successfully! Med Licence No: %s", medLicence));
+            if(this.doctors.contains(doctorToAdd)) throw new IllegalDoctorException(String.format("Doctor not added. Duplicated medical licence number: %s.", medLicence));
+            this.doctors.add(doctorToAdd);
+
+            ConsoleLog.success(String.format("New doctor was added successfully! Med Licence No: %s", medLicence));
         } catch (NoSuchElementException e) {
             ConsoleLog.error("There was an error capturing input");
-            e.printStackTrace();
+        } catch (IllegalDoctorException e) {
+            ConsoleLog.error(e.getLocalizedMessage());
         }
     }
 
@@ -111,22 +115,26 @@ public class WestminsterSkinConsultationManager implements SkinConsultationManag
 
     @Override
     public void removeDoctor() {
-        ConsoleLog.logWithColors(ConsoleColors.RED_BOLD_BRIGHT, "Deleting doctor...");
-        String medLicence = InputPrompter.promptValidatedString("Enter medical licence number: ", Validator.MEDICAL_LICENSE_NO_STRING);
-        Object[] doctorsToRemove = this.doctors.stream().filter((Doctor d) -> d.getMedicalLicenceNo().equals(medLicence)).toArray();
-        for (Object doctor : doctorsToRemove) {
-            Doctor d = (Doctor) doctor;
-            if(!d.getConsultations().isEmpty()) {
-                ConsoleLog.error("Doctor you are trying to delete still has some consultations " +
-                        "assigned on the system. Please cancel the consultations before deleting");
-                return;
-            }
-            this.doctors.remove(doctor);
+        try {
+            ConsoleLog.logWithColors(ConsoleColors.RED_BOLD_BRIGHT, "Deleting doctor...");
+            String medLicence = InputPrompter.promptValidatedString("Enter medical licence number: ", Validator.MEDICAL_LICENSE_NO_STRING);
+            Object[] doctorsToRemove = this.doctors.stream().filter((Doctor d) -> d.getMedicalLicenceNo().equals(medLicence)).toArray();
+
+            //assuming there's only one doctor possible from a medical licence number
+            if(doctorsToRemove.length == 0) throw new IllegalDoctorException(String.format("No doctor available in the system with the provided medical licence no: %s", medLicence));
+            else if (doctorsToRemove.length > 1) ConsoleLog.warning(String.format("There seems to be more than one doctor with the medical licence no: %s. Removing the first record.", medLicence));
+
+            this.doctors.remove((Doctor) doctorsToRemove[0]);
+
+            ConsoleLog.success(String.format("Doctor with licence number %s has " +
+                    "been " +
+                    "removed from the system!", medLicence));
+            ConsoleLog.info(String.format("No. of available doctors in the system: %d", this.getDoctors().size()));
+        } catch (IllegalDoctorException e) {
+            ConsoleLog.error(e.getLocalizedMessage());
+        } catch (Exception e) {
+            ConsoleLog.error("There was an unexpected error");
         }
-        ConsoleLog.success(String.format("Doctor with licence number %s has " +
-                "been " +
-                "removed from the system!", medLicence));
-        ConsoleLog.info(String.format("No. of available doctors in the system: %d",this.getDoctors().size()));
     }
 
     @Override
@@ -146,7 +154,7 @@ public class WestminsterSkinConsultationManager implements SkinConsultationManag
         }
 
         ConsoleLog.logWithColors(ConsoleColors.CYAN_BOLD_BRIGHT, "Viewing doctors...");
-        ArrayList<Doctor> doctors = (ArrayList<Doctor>) this.getDoctors().clone();
+        ArrayList<Doctor> doctors = this.getDoctors();
         doctors.sort(new DoctorNameComparator());
 
         CommandLineTable ct = new CommandLineTable();
@@ -274,7 +282,7 @@ public class WestminsterSkinConsultationManager implements SkinConsultationManag
             mainMenuInput = InputPrompter.promptValidatedString(promptMessage, new Validator<String>() {
                 @Override
                 public boolean validate(String input) {
-                    ArrayList<String> allowed = new ArrayList<>(Arrays.asList("A", "D", "V","VC", "S", "L", "G", "Q"));
+                    ArrayList<String> allowed = new ArrayList<>(Arrays.asList("A", "D", "V", "S", "L", "G", "Q"));
                     return allowed.contains(input.toUpperCase());
                 }
             });

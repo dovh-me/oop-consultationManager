@@ -2,7 +2,7 @@ package gui.pages;
 
 import gui.components.Page;
 import gui.components.layouts.TableWithActionButtonsPanel;
-import gui.models.Consultation;
+import models.Consultation;
 import javafx.scene.control.Button;
 import main.GUIApplication;
 import util.ConsoleLog;

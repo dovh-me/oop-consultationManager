@@ -1,7 +1,7 @@
 package gui.components;
 
 import gui.components.layouts.TableWithActionButtonsPanel;
-import gui.models.Doctor;
+import models.Doctor;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Pos;
 import javafx.scene.layout.FlowPane;
