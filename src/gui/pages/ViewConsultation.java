@@ -4,6 +4,7 @@ import exceptions.CryptoException;
 import gui.components.CVerticalImageGallery;
 import gui.components.Page;
 import gui.components.UpdateConsultationPopup;
+import javafx.geometry.Insets;
 import models.Consultation;
 import models.Doctor;
 import models.Patient;
@@ -38,6 +39,7 @@ public class ViewConsultation extends Page {
         mainPane.add(initConsultationPane(),0,1,2,1);
         mainPane.add(createActionPane(),0,2,2,1);
 
+        this.setPadding(new Insets(5));
         this.getChildren().add(mainPane);
     }
     private GridPane initDoctorPane() {
@@ -93,7 +95,7 @@ public class ViewConsultation extends Page {
                 return;
             }
             Patient p = newValue.getPatient();
-            patientUID.setText(p.getUid());
+            patientUID.setText(p.getUID());
             patientName.setText(p.getFullName());
             patientContactNo.setText(p.getContactNo());
 
@@ -114,6 +116,7 @@ public class ViewConsultation extends Page {
         scrollableWrapper.setContent(noteImages);
         scrollableWrapper.setHmax(800);
         consultationPane.setHgap(5);
+        textNotes.setEditable(false);
 
         consultationPane.add(createSectionTitleLabel("Consultation Information"), 0,0,2,1);
         summaryFieldsPane.addRow(0,new Label("Consultation Cost: "), costLabel);
@@ -169,6 +172,7 @@ public class ViewConsultation extends Page {
     private HBox createActionPane() {
         HBox pane = new HBox();
         pane.setAlignment(Pos.CENTER_RIGHT);
+        pane.setSpacing(5);
 
         Button backButton = new Button("Back");
         Button updateConsultation = new Button("Update Consultation");

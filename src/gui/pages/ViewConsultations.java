@@ -2,9 +2,10 @@ package gui.pages;
 
 import gui.components.Page;
 import gui.components.layouts.TableWithActionButtonsPanel;
-import models.Consultation;
+import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import main.GUIApplication;
+import models.Consultation;
 import util.ConsoleLog;
 
 public class ViewConsultations extends Page {
@@ -16,6 +17,7 @@ public class ViewConsultations extends Page {
     public ViewConsultations() {
         initActionButtons();
         this.mainContentPanel = new TableWithActionButtonsPanel<>(Consultation.tableFieldNames, Consultation.tableColumns, GUIApplication.app.manager.getConsultations(), viewConsultationButton, cancelConsultationButton);
+        this.setPadding(new Insets(5));
         this.getChildren().add(this.mainContentPanel);
 
         mainContentPanel.getTable().getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {

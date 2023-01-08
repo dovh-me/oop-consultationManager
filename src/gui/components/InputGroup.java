@@ -4,16 +4,16 @@ import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
-import util.GUIValidator;
+import util.Validator;
 
 public abstract class InputGroup<T extends Node, S> extends GridPane {
     private final T inputField;
     private final Label inputValidationLabel;
-    private final GUIValidator<S>[] finalValidators;
+    private final Validator<S>[] finalValidators;
 
     public abstract S getInput();
 
-    public InputGroup(String title,T inputField, GUIValidator<S>[] finalValidators) {
+    public InputGroup(String title,T inputField, Validator<S>[] finalValidators) {
         this.finalValidators = finalValidators;
 
         Label inputLabel = new Label(title);
@@ -30,7 +30,7 @@ public abstract class InputGroup<T extends Node, S> extends GridPane {
 
     public boolean validateInput() {
         boolean isValid = true;
-        for(GUIValidator<S> validator: this.getFinalValidators()) {
+        for(Validator<S> validator: this.getFinalValidators()) {
             isValid = validator.validate(this.getInput());
 
             if(!isValid  && validator.getValidationMessage() != null) {
@@ -56,7 +56,7 @@ public abstract class InputGroup<T extends Node, S> extends GridPane {
         return inputValidationLabel;
     }
 
-    public GUIValidator<S>[] getFinalValidators() {
+    public Validator<S>[] getFinalValidators() {
         return finalValidators;
     }
 }

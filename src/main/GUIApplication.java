@@ -4,8 +4,10 @@ import gui.components.layouts.ApplicationRoot;
 import gui.pages.*;
 import javafx.application.Application;
 import javafx.scene.Scene;
+import javafx.scene.image.Image;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
+import util.AlertBox;
 import util.ConsoleLog;
 
 public class GUIApplication extends Application{
@@ -84,13 +86,14 @@ public class GUIApplication extends Application{
     }
 
     @Override
-    public void start(Stage primaryStage) throws Exception {
+    public void start(Stage primaryStage) {
         GUIApplication.app = this;
         GUIApplication.primaryStage = primaryStage;
 
         // TODO: make mTemp field non static or refactor
         initializeConsultationManager(GUIApplication.mTemp);
         StackPane root = new StackPane();
+        primaryStage.getIcons().add(new Image("/assets/stethoscope.png"));
         primaryStage.setScene(new Scene(root, 800, 800));
         primaryStage.setAlwaysOnTop(true);
         primaryStage.setFullScreen(true);
@@ -98,5 +101,13 @@ public class GUIApplication extends Application{
         primaryStage.show();
 
         root.getChildren().add(af);
+    }
+
+    @Override
+    public void stop() throws Exception {
+        // prompt user to save
+        boolean shouldSave = AlertBox.showConfirmationAlert("Do you want to save any changes before closing\n\nWARNING: If you exit forget to save before exiting console app all the changes will be lost.");
+        if(shouldSave) GUIApplication.app.manager.saveToFile();
+        super.stop();
     }
 }

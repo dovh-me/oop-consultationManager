@@ -26,6 +26,7 @@ public class PatientsTable extends StackPane {
         TextField searchBar = initSearchbar();
         this.addPatientButton = initActionButtons();
         this.mainContentPanel = new TableWithActionButtonsPanel<>(Patient.tableFieldNames, Patient.tableColumns, GUIApplication.app.manager.getPatients(), addPatientButton);
+        this.mainContentPanel.getTable().setMaxHeight(600);
         borderPane.setTop(searchBar);
         borderPane.setCenter(mainContentPanel);
         this.getChildren().add(borderPane);
@@ -45,7 +46,7 @@ public class PatientsTable extends StackPane {
                 // check for substring values of uid and patient full name
                 return
                         // uid
-                        patient.getUid().toLowerCase().contains(value) ||
+                        patient.getUID().toLowerCase().contains(value) ||
                         // full name
                         patient.getFullName().toLowerCase().contains(value) ;
             });

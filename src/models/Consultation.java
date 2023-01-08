@@ -32,6 +32,7 @@ public class Consultation implements Serializable, Comparable<Consultation>, Tab
     private Patient patient;
     private Doctor doctor;
     private SecretKey encryptKey;
+    private int noteImageIndex;
 
     public Consultation() {
     }
@@ -116,19 +117,22 @@ public class Consultation implements Serializable, Comparable<Consultation>, Tab
 
     public void setNoteImages(ArrayList<File> noteImages) throws IOException {
         ArrayList<File> tmp = new ArrayList<>();
-        File outputFolder = new File(String.format("./data/%s/%s", this.getPatient().getUid(), this.getConsultationUID()));
+        File outputFolder = new File(String.format("./data/%s/%s", this.getPatient().getUID(), this.getConsultationUID()));
 
         if (outputFolder.mkdirs()) ConsoleLog.info("Patient assets folder created");
         else ConsoleLog.info("Patients assets folder already exists");
 
         for (File noteImage : noteImages) {
+            if(this.noteImages.contains(noteImage)) {
+                tmp.add(noteImage);
+                continue;
+            }
             try {
                 String fileName = noteImage.getName().endsWith(".encrypted") ? String.format("/%s",noteImage.getName()) : String.format("/%s.encrypted", noteImage.getName());
                 File outputFile = new File(outputFolder + fileName);
                  if (!outputFile.createNewFile()) {
                     ConsoleLog.error("A file exists in the provided path. Old file is being overwritten");
-                    outputFile.delete(); // tries again to delete the file
-                    if (!outputFile.createNewFile()) continue; // tries to create the file again
+                    if (!outputFile.createNewFile()) throw new Exception("Unable to create encrypted file"); // skips if failed
                 }
 
 
@@ -137,6 +141,8 @@ public class Consultation implements Serializable, Comparable<Consultation>, Tab
             } catch (CryptoException | NoSuchAlgorithmException e) {
                 ConsoleLog.error("There was an error encrypting the file");
                 e.printStackTrace();
+            } catch(Exception e) {
+                ConsoleLog.error(e.getLocalizedMessage());
             }
         }
         this.noteImages = tmp;
@@ -184,7 +190,7 @@ public class Consultation implements Serializable, Comparable<Consultation>, Tab
     }
 
     public void setTextNotes(String textNotes) throws IOException, NoSuchAlgorithmException, CryptoException {
-        this.textNotes = new File(String.format("./data/%s/%s/tn.txt.encrypted", this.getPatient().getUid(), this.getConsultationUID()));
+        this.textNotes = new File(String.format("./data/%s/%s/tn.txt.encrypted", this.getPatient().getUID(), this.getConsultationUID()));
 
         if (!this.textNotes.exists()) {
             this.textNotes.getParentFile().mkdirs();
@@ -210,11 +216,9 @@ public class Consultation implements Serializable, Comparable<Consultation>, Tab
     }
 
     public String getPatientUID() {
-        return this.patient.getUid();
+        return this.patient.getUID();
     }
 
-    public void setPatientUID(String uid) {
-    } // just as a placeholder
 
     public String getDoctorName() {
         return this.getDoctor().getFullName();
@@ -224,21 +228,12 @@ public class Consultation implements Serializable, Comparable<Consultation>, Tab
         return consultationDateTime;
     }
 
-    public void setConsultationDateTime(LocalDateTime localDateTime) {
-    }
-
     public String getSpecialization() {
         return this.doctor.getSpecialization();
     }
 
-    public void setSpecialization(String s) {
-    }
-
     public String getPatientName() {
         return this.patient.getFullName();
-    }
-
-    public void setPatientName(String name) {
     }
 
     public String getConsultationUID() {

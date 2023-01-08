@@ -2,16 +2,20 @@ package gui.pages;
 
 import constants.Formats;
 import gui.components.*;
-import models.Doctor;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.layout.*;
+import javafx.scene.layout.ColumnConstraints;
+import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.GridPane;
 import main.GUIApplication;
-import util.GUIValidator;
+import models.Doctor;
+import util.Validator;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Optional;
 
@@ -39,6 +43,7 @@ public class CheckAvailability extends Page {
         mainPane.add(initContinueButton(), 0,3);
         mainPane.add(initDoctorsTable(),1,0,1,3);
 
+        this.setPadding(new Insets(5));
         this.setAlignment(Pos.CENTER);
         this.getChildren().add(mainPane);
     }
@@ -52,12 +57,12 @@ public class CheckAvailability extends Page {
         ColumnConstraints columnConstraints = new ColumnConstraints();
         Label titleLabel = new Label("Select Doctor");
         this.consultationDate = new CDatePickerInputGroup(
-                "Consultation date (yyyy-MM-dd):", new GUIValidator[]{GUIValidator.NOT_NULL});
+                "Consultation date (yyyy-MM-dd):", new Validator[]{Validator.NOT_NULL});
         this.consultationTime = new CTimeFieldInputGroup(
-                "Consultation Time (HH:mm):", new GUIValidator[]{GUIValidator.NOT_NULL}
+                "Consultation Time (HH:mm):", new Validator[]{Validator.NOT_NULL}
         );
         this.doctorMedLicNo = new CTextFieldInputGroup(
-                "Medical Licence No:", new GUIValidator[]{}, new GUIValidator[]{GUIValidator.NOT_EMPTY,GUIValidator.MEDICAL_LICENSE_NO});
+                "Medical Licence No:", new Validator[]{}, new Validator[]{Validator.NOT_EMPTY, Validator.MEDICAL_LICENSE_NO});
         Button checkAvailabilityButton = new Button("Check Availability");
 
         titleLabel.setStyle("-fx-font-weight: bold;");
@@ -83,6 +88,13 @@ public class CheckAvailability extends Page {
             Doctor doctor = optional.get();
             // When this segment is executed the inputs are expected to be already validated
             LocalDateTime consultationDateTime = LocalDateTime.of(this.consultationDate.getInput(), this.consultationTime.getInput());
+
+            // Show the error message if the consultation being booked for a past date time
+            if(consultationDateTime.isBefore(LocalDateTime.now())) {
+                showValidationMessage("Consultation cannot be booked for date and times from the past", "-fx-text-fill: red");
+                return;
+            }
+
             if(!doctor.getAvailability(consultationDateTime)){
                 doctor = GUIApplication.app.manager.getAvailableDoctor(optional.get().getSpecialization(), consultationDateTime);
                 if(doctor == null) {
@@ -195,8 +207,12 @@ public class CheckAvailability extends Page {
         this.validationMessage.setText("");
         this.validationMessage.setVisible(false);
 
+        LocalTime timeToSet = LocalTime.now();
+        timeToSet = timeToSet.plusHours(2);
+        timeToSet = timeToSet.minusMinutes(timeToSet.getMinute());
+
         this.consultationDate.getInputField().setValue(LocalDate.now());
-        this.consultationTime.getInputField().resetValue();
+        this.consultationTime.getInputField().setValue(timeToSet);
     }
 
     private void showValidationMessage(String message, String messageStyles) {

@@ -28,11 +28,13 @@ public class CSelectImageNotes extends VBox {
         this.selectedFiles = FXCollections.observableList(new ArrayList<>());
         Label validationMessage = new Label();
         Button selectFileButton = new Button("Select File");
+        ColumnConstraints halfConstraint = new ColumnConstraints();
+        halfConstraint.setPercentWidth(50);
         this.recordPane = new VBox();
         ScrollPane scrollWrapper = new ScrollPane();
-        scrollWrapper.setVmax(180);
-        scrollWrapper.setMinHeight(180);
-        scrollWrapper.setMaxHeight(180);
+        scrollWrapper.setVmax(110);
+        scrollWrapper.setMinHeight(110);
+        scrollWrapper.setMaxHeight(110);
         scrollWrapper.setMinWidth(420);
         scrollWrapper.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
         scrollWrapper.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
@@ -61,7 +63,10 @@ public class CSelectImageNotes extends VBox {
 
         scrollWrapper.setContent(recordPane);
         // add elements to the main pane
-        this.getChildren().addAll(selectFileButton, validationMessage, scrollWrapper);
+        GridPane topPaneWrapper = new GridPane();
+        topPaneWrapper.getColumnConstraints().addAll(halfConstraint, halfConstraint);
+        topPaneWrapper.addRow(0, selectFileButton,validationMessage);
+        this.getChildren().addAll(topPaneWrapper, scrollWrapper);
     }
 
     private void addSelectedFileRecord(File file) {

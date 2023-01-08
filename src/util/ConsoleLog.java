@@ -12,7 +12,7 @@ public class ConsoleLog {
 
     public static void logWithColors(String color, String m) {
         System.out.print(color);
-        ConsoleLog.log(m);
+        ConsoleLog.log(m,true);
         System.out.println(ConsoleColors.RESET);
     }
     public static void logWithColors(String color, String m, boolean isSameLine) {

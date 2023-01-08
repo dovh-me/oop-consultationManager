@@ -7,6 +7,7 @@ import gui.components.AddPatientFormPopup;
 import gui.components.CNotesInputGroup;
 import gui.components.Page;
 import gui.components.PatientsTable;
+import javafx.geometry.Insets;
 import models.Consultation;
 import models.Doctor;
 import models.Patient;
@@ -46,6 +47,7 @@ public class AddConsultation extends Page {
         ColumnConstraints percentWidthConstraint = new ColumnConstraints();
         percentWidthConstraint.setPercentWidth(50);
         GridPane mainPanel = createGeneralGridPane();
+        mainPanel.getColumnConstraints().addAll(percentWidthConstraint, percentWidthConstraint);
         mainPanel.setAlignment(Pos.CENTER);
         GridPane doctorPane = initDoctorInfoPanel();
         GridPane patientPane = initPatientInfoPanel();
@@ -54,6 +56,8 @@ public class AddConsultation extends Page {
         FlowPane addConsultationButtonPane = initAddConsultationButton();
 
         mainPanel.setVgap(10);
+        mainPanel.setStyle("-fx-background-color: #a5cafa;");
+        mainPanel.setPadding(new Insets(5));
 
         mainPanel.addRow(0,doctorPane);
         mainPanel.add(new Separator(Orientation.HORIZONTAL),0,1,2,1);
@@ -62,7 +66,11 @@ public class AddConsultation extends Page {
         mainPanel.addRow(4,consultationInfoPane);
         mainPanel.add(addConsultationButtonPane,0,5,2,1);
 
-        this.getChildren().add(new ScrollPane(mainPanel));
+        this.setPadding(new Insets(5));
+        ScrollPane scrollWrapper = new ScrollPane(mainPanel);
+        scrollWrapper.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        scrollWrapper.setStyle("-fx-background-color: #a5cafa;");
+        this.getChildren().add(scrollWrapper);
     }
 
     private GridPane initDoctorInfoPanel() {
@@ -122,6 +130,7 @@ public class AddConsultation extends Page {
         innerGridPane.addRow(1, new Label("Patient Name: "), patientName);
         innerGridPane.addRow(2, new Label("Date of Birth: "), dateOfBirth);
         innerGridPane.addRow(3, new Label("Contact No: "), contactNo);
+        innerGridPane.add(new Label("NOTE: Please select a patient from the table!"),0,4,2,1);
 
         // register the change listener on patient property
         patientProperty.addListener((observable,oldValue, newValue) -> {

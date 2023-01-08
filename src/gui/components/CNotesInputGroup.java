@@ -34,6 +34,7 @@ public class CNotesInputGroup extends GridPane{
         textNotes.setPrefColumnCount(15);
         textNotes.setPrefRowCount(8);
 
+        this.setVgap(10);
         this.add(validationMessage, 1,0);
         this.add(textNotes, 1,1);
         this.add(imageNotes, 1,2);

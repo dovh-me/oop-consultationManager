@@ -158,14 +158,13 @@ public class DoctorTests {
         });
 
         // verify the correct output is displayed - The output is already sorted by the names
-        assertEquals("\u001B[1;96mViewing doctors...\n" +
-                "\u001B[0m\n" +
-                "+---------------------+-------+---------+---------------+-------------+------------------------+\n" +
-                "| Medical Licence No. | Name  | Surname | Date of Birth | Contact No. | Specialization         |\n" +
-                "+---------------------+-------+---------+---------------+-------------+------------------------+\n" +
-                "| a321321             | Brad  | Cooper  | 1990-11-10    | 0711115544  | Paediatric Dermatology |\n" +
-                "| a123123             | James | Butler  | 2000-12-12    | 0717896541  | Cosmetic Dermatology   |\n" +
-                "+---------------------+-------+---------+---------------+-------------+------------------------+\n",terminalOutput);
+        assertEquals("\u001B[1;96mViewing doctors sorted by last name...\u001B[0m\n" +
+                "+---------------------+---------+------------+---------------+-------------+------------------------+\n" +
+                "| Medical Licence No. | Surname | First Name | Date of Birth | Contact No. | Specialization         |\n" +
+                "+---------------------+---------+------------+---------------+-------------+------------------------+\n" +
+                "| a123123             | Butler  | James      | 2000-12-12    | 0717896541  | Cosmetic Dermatology   |\n" +
+                "| a321321             | Cooper  | Brad       | 1990-11-10    | 0711115544  | Paediatric Dermatology |\n" +
+                "+---------------------+---------+------------+---------------+-------------+------------------------+\n",terminalOutput);
     }
 
 
@@ -196,16 +195,15 @@ public class DoctorTests {
         // Tell Java to use your special stream
         System.setOut(ps);
 
-        // verify the terminal output to match with pre-stored output
-        manager.mainMenuInputHandler("v");
-        // Put things back
-        System.out.flush();
-        System.setOut(old);
         try {
             callback.call();
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            System.out.println(e.getLocalizedMessage());
         }
+
+        // Put things back
+        System.out.flush();
+        System.setOut(old);
 
         return outputStream.toString();
     }

@@ -1,12 +1,12 @@
 package gui.components;
 
-import util.GUIValidator;
+import util.Validator;
 
 import java.time.LocalDate;
 
 public class CDatePickerInputGroup extends InputGroup<CDatePicker, LocalDate> {
 
-    public CDatePickerInputGroup(String title, GUIValidator<LocalDate>[] finalValidators) {
+    public CDatePickerInputGroup(String title, Validator<LocalDate>[] finalValidators) {
         super(title, new CDatePicker(), finalValidators);
     }
 

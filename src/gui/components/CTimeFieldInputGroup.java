@@ -1,11 +1,11 @@
 package gui.components;
 
-import util.GUIValidator;
+import util.Validator;
 
 import java.time.LocalTime;
 
 public class CTimeFieldInputGroup extends InputGroup<CTimeField, LocalTime>{
-    public CTimeFieldInputGroup(String title, GUIValidator<LocalTime>[] finalValidators) {
+    public CTimeFieldInputGroup(String title, Validator<LocalTime>[] finalValidators) {
         super(title, new CTimeField(), finalValidators);
     }
 

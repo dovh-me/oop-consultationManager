@@ -3,6 +3,8 @@ package gui.components;
 import constants.Formats;
 import exceptions.CryptoException;
 import exceptions.IllegalConsultationException;
+import javafx.geometry.Insets;
+import javafx.scene.image.Image;
 import models.Consultation;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -15,7 +17,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import util.AlertBox;
 import util.ConsoleLog;
-import util.GUIValidator;
+import util.Validator;
 
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
@@ -30,23 +32,26 @@ public class UpdateConsultationPopup extends Stage {
         super();
         this.consultation = consultationToUpdate;
         VBox root = new VBox();
-        root.setStyle("-fx-padding: 5px;");
+        root.setPadding(new Insets(5));
+        root.setStyle("-fx-background-color: #a5cafa;");
+        root.getStylesheets().add("/assets/styles/styles.css");
         root.getChildren().addAll(
                 initUpdateConsultationForm(),
                 initActionButtonPane()
         );
 
+        this.getIcons().add(new Image("/assets/stethoscope.png"));
         this.setTitle("Update Consultation | " + this.consultation.getConsultationUID());
         this.setAlwaysOnTop(true);
         this.setResizable(true);
-        this.setScene(new Scene(root, 700,600));
+        this.setScene(new Scene(root, 705,600));
     }
 
     private GridPane initUpdateConsultationForm() {
         GridPane pane = new GridPane();
         Label titleLabel = new Label("Update Consultation");
         this.costLabel = new Label(Float.toString(this.consultation.getCost()));
-        this.calculateCost = new CTextFieldInputGroup("Calculate Cost", new GUIValidator[]{ GUIValidator.NUMBERS_ONLY }, new GUIValidator[]{});
+        this.calculateCost = new CTextFieldInputGroup("Calculate Cost", new Validator[]{ Validator.NUMBERS_ONLY }, new Validator[]{});
         this.notes = new CNotesInputGroup("Notes");
         try {
             this.notes.setImageNotes(this.consultation.getNoteImages());
@@ -120,6 +125,7 @@ public class UpdateConsultationPopup extends Stage {
             }
         });
 
+        pane.setHgap(5);
         pane.getChildren().addAll(
                 saveChangesButton,
                 cancelButton

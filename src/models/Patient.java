@@ -7,20 +7,20 @@ import java.util.UUID;
 
 public class Patient extends Person implements Serializable {
     public static String[] tableColumns = new String[] {"Patient UID." ,"Full Name", "Date of Birth", "Contact No."};
-    public static String[] tableFieldNames = new String[] {"uid", "fullName", "dob", "contactNo"};
-    private final String uid;
+    public static String[] tableFieldNames = new String[] {"UID", "fullName", "dob", "contactNo"};
+    private final String UID;
 
     public Patient(String name, String surname, LocalDate dob, String contactNo) {
         super(name, surname, dob, contactNo);
-        this.uid = generateUID();
+        this.UID = generateUID();
     }
     public Patient(String name, String surname, String dob, String contactNo) throws DateTimeParseException {
         super(name, surname, dob, contactNo);
-        this.uid = generateUID();
+        this.UID = generateUID();
     }
 
-    public String getUid() {
-        return uid;
+    public String getUID() {
+        return UID;
     }
 
     private String generateUID() {
@@ -43,6 +43,6 @@ public class Patient extends Person implements Serializable {
         Patient p = (Patient) obj;
 
         // Return boolean by checking UIDs
-        return this.getUid().equals(p.getUid());
+        return this.getUID().equals(p.getUID());
     }
 }

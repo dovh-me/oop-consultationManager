@@ -13,8 +13,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class Doctor extends Person implements Serializable {
-    public static String[] tableColumns = new String[] {"Medical Licence No." ,"Full Name", "Specialisation", "Contact No."};
-    public static String[] tableFieldNames = new String[] {"medicalLicenceNo", "fullName", "specialization", "contactNo"};
+    public static String[] tableColumns = new String[] {"Medical Licence No." ,"Full Name", "Specialisation", "Contact No.", "Available From(24h)", "Available To(24h)"};
+    public static String[] tableFieldNames = new String[] {"medicalLicenceNo", "fullName", "specialization", "contactNo", "consultationStart", "consultationEnd"};
     private String medicalLicenceNo;
     private String specialization;
     private TreeSet<Consultation> consultations = new TreeSet<>();
@@ -50,7 +50,6 @@ public class Doctor extends Person implements Serializable {
         return consultationStream.collect(Collectors.toList());
     }
 
-    // TODO: Throw error if the object being updated does not exist in the set?
     public void updateConsultation(Consultation c) {
         // Removes the object if already present in the set
         this.consultations.remove(c);
@@ -72,8 +71,8 @@ public class Doctor extends Person implements Serializable {
             LocalDateTime currDateTime = LocalDateTime.of(LocalDate.from(consultation.getConsultationDateTime()), LocalTime.from(consultation.getConsultationDateTime()));
             // Return false if consultation being checked is not one hour before or after the current consultation being placed
             if(currDateTime.isEqual(ldt)) return false;
-            if(currDateTime.isAfter(ldt) && !currDateTime.isAfter(ldt.plusHours(1))) return false;
-            if(currDateTime.isBefore(ldt) && !currDateTime.isBefore(ldt.minusHours(1))) return false;
+            if(currDateTime.isAfter(ldt) && !currDateTime.isAfter(ldt.plusMinutes(58))) return false;
+            if(currDateTime.isBefore(ldt) && !currDateTime.isBefore(ldt.minusMinutes(58))) return false;
         }
 
         return true;
@@ -111,6 +110,14 @@ public class Doctor extends Person implements Serializable {
 
     public void setConsultationStart(LocalTime consultationStart) {
         this.consultationStart = consultationStart;
+    }
+
+    public LocalTime getConsultationEnd() {
+        return consultationEnd;
+    }
+
+    public void setConsultationEnd(LocalTime consultationEnd) {
+        this.consultationEnd = consultationEnd;
     }
 
     @Override

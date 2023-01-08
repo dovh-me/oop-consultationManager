@@ -16,6 +16,8 @@ public class InputPrompter {
         while(true) {
             input =  InputPrompter.promptString(promptMessage);
             if(v.validate(input)) break;
+            if(v.getValidationMessage() != null || !v.getValidationMessage().isEmpty())
+                ConsoleLog.error(v.getValidationMessage());
             ConsoleLog.error("Invalid input. Please enter a valid input to continue.");
         }
 

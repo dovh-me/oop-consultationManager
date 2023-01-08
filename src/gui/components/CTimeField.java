@@ -7,12 +7,13 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.TextFormatter;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.Border;
-import javafx.scene.layout.HBox;
+import javafx.scene.layout.ColumnConstraints;
+import javafx.scene.layout.GridPane;
 import javafx.util.StringConverter;
 
 import java.time.LocalTime;
 
-public class CTimeField extends HBox {
+public class CTimeField extends GridPane {
     private final TextField hours;
     private final TextField minutes;
     public CTimeField() {
@@ -25,10 +26,13 @@ public class CTimeField extends HBox {
         prepareTextField(hours);
         prepareTextField(minutes);
 
-
-        this.getChildren().addAll(hours, createLabel(),minutes);
-        this.setPadding(new Insets(4));
-        this.setStyle("-fx-background-color: white;");
+        ColumnConstraints halfWidthConstraint = new ColumnConstraints();
+        halfWidthConstraint.setPercentWidth(45);
+        ColumnConstraints fivePtgConstraint = new ColumnConstraints();
+        fivePtgConstraint.setPercentWidth(10);
+        this.getColumnConstraints().addAll(halfWidthConstraint,fivePtgConstraint,halfWidthConstraint);
+        this.addRow(0,hours, createLabel(),minutes);
+        this.setStyle("-fx-background-color: white; -fx-background-radius: 5px;");
     }
 
     public static void prepareTextField(TextField tf) {
@@ -68,7 +72,7 @@ public class CTimeField extends HBox {
 
     public static Label createLabel() {
         Label label = new Label(":");
-        label.setPrefWidth(3);
+        label.setAlignment(Pos.CENTER);
         return label;
     }
 

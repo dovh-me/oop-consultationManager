@@ -10,6 +10,7 @@ public abstract class Page extends StackPane {
     public Page() {
         super();
         this.setAlignment(Pos.CENTER);
+        this.setStyle("-fx-background-color: #a5cafa;");
     }
 
     public void onNavigation() {

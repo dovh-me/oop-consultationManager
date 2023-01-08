@@ -2,6 +2,7 @@ package gui.pages;
 
 import gui.components.Page;
 import gui.components.layouts.TableWithActionButtonsPanel;
+import javafx.geometry.Insets;
 import models.Doctor;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
@@ -10,7 +11,7 @@ import main.GUIApplication;
 import util.ConsoleLog;
 
 public class ViewDoctors extends Page {
-    private TableWithActionButtonsPanel<Doctor> mainContentPanel;
+    private final TableWithActionButtonsPanel<Doctor> mainContentPanel;
     private Button addConsultationButton;
 
     public ViewDoctors() {
@@ -26,15 +27,15 @@ public class ViewDoctors extends Page {
             CheckAvailability.doctor = newValue;
             addConsultationButton.setDisable(false);
         });
+        this.setPadding(new Insets(5));
         this.getChildren().add(this.mainContentPanel);
     }
 
     public void initActionButtons() {
         this.addConsultationButton = new Button("Add Consultation");
         this.addConsultationButton.setDisable(true);
-        this.addConsultationButton.setOnAction(actionEvent -> {
-            GUIApplication.app.af.navigateTo(GUIApplication.app.getCheckAvailability());
-        });
+        this.addConsultationButton.setOnAction(actionEvent ->
+                GUIApplication.app.af.navigateTo(GUIApplication.app.getCheckAvailability()));
         FlowPane pane = new FlowPane();
         pane.setMinWidth(Double.MAX_VALUE);
         pane.setAlignment(Pos.CENTER_RIGHT);

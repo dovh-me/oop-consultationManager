@@ -2,6 +2,7 @@ package gui.components.layouts;
 
 import gui.components.TabularModel;
 import javafx.collections.FXCollections;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.SelectionMode;
@@ -55,6 +56,8 @@ public class TableWithActionButtonsPanel<T extends TabularModel> extends BorderP
 
     private void initActionButtons(Button[] actionButtons) {
         this.actionButtonsContainer = new FlowPane();
+        this.actionButtonsContainer.setHgap(5);
+        this.actionButtonsContainer.setPadding(new Insets(5,0,0,0));
         this.actionButtonsContainer.setAlignment(Pos.CENTER_RIGHT);
         for (Button actionButton : actionButtons) {
             this.actionButtonsContainer.getChildren().add(actionButton);

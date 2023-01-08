@@ -22,7 +22,6 @@ public class MainMenu extends Page {
                 this.addConsultationButton, this.viewConsultationsButton, this.viewDoctorsButton
         );
         this.contentPane.setCenter(mainPanel);
-        this.setStyle("-fx-background-color:#6262db");
         this.getChildren().add(contentPane);
         ApplicationRoot.setApplicationTitle("Main Menu");
     }
@@ -34,8 +33,8 @@ public class MainMenu extends Page {
 
     private void initButtons() {
         // Initialize buttons
-        this.addConsultationButton = new MainMenuButton("Add Consultation",new ImageView("/assets/consultation.png"));
-        this.viewConsultationsButton = new MainMenuButton("View Consultations",new ImageView("/assets/consultation.png"));
+        this.addConsultationButton = new MainMenuButton("Add Consultation",new ImageView("/assets/medical-add.png"));
+        this.viewConsultationsButton = new MainMenuButton("View Consultations",new ImageView("/assets/medical-view.png"));
         this.viewDoctorsButton = new MainMenuButton("View Doctors",new ImageView("assets/doctor.png"));
 
         // Register mouse click event listeners

@@ -27,6 +27,7 @@ public class WestminsterSkinConsultationManager implements SkinConsultationManag
     }
 
     private void printMainMenu() {
+        System.out.println();
         ConsoleLog.logWithColors(ConsoleColors.BLUE_BACKGROUND, "!WELCOME TO WESTMINSTER SKIN CONSULTATION MANAGER COMMAND LINE INTERFACE!", true);
         System.out.println();
         CommandLineTable st = new CommandLineTable();
@@ -70,16 +71,24 @@ public class WestminsterSkinConsultationManager implements SkinConsultationManag
     }
 
     private String[] promptPerson() throws NoSuchElementException {
-        String name = InputPrompter.promptValidatedString("Enter name: ", Validator.LETTER_STRING);
-        String surname = InputPrompter.promptValidatedString("Enter surname: ", Validator.LETTER_STRING);
+        String name = InputPrompter.promptValidatedString("Enter name: ", Validator.ENGLISH_LETTERS_ONLY);
+        String surname = InputPrompter.promptValidatedString("Enter surname: ", Validator.ENGLISH_LETTERS_ONLY);
         String dob = InputPrompter.promptValidatedString("Enter date of birth (format: yyyy-mm-dd): ", Validator.DATE_STRING);
-        String contactNo = InputPrompter.promptValidatedString("Enter contact number: ", Validator.PHONE_NUMBER_STRING);
+        String contactNo = InputPrompter.promptValidatedString("Enter contact number: ", Validator.PHONE_NUMBER);
 
         return new String[]{name, surname, dob, contactNo};
     }
 
     public Optional<Doctor> findDoctor(String medLicence) {
         return this.doctors.stream().filter((Doctor d) -> d.getMedicalLicenceNo().equals(medLicence)).findFirst();
+    }
+
+    public Doctor getAvailableDoctor(String specialization, LocalDateTime dateTime) {
+        List<Doctor> availableDoctors =  this.doctors.stream().filter(doctor -> doctor.getSpecialization().equals(specialization) && doctor.getAvailability(dateTime)).collect(Collectors.toList());
+        if(availableDoctors.isEmpty()) return null;
+        // Generate a random integer to select the doctor
+        int randomIndex = (int) Math.round(Math.random() * (availableDoctors.size() - 1));
+        return availableDoctors.get(randomIndex);
     }
 
     @Override
@@ -92,8 +101,8 @@ public class WestminsterSkinConsultationManager implements SkinConsultationManag
 
             ConsoleLog.logWithColors(ConsoleColors.GREEN_BOLD_BRIGHT, "Adding doctor...");
             String[] pData = this.promptPerson();
-            String medLicence = InputPrompter.promptValidatedString("Enter medical licence number: ", Validator.MEDICAL_LICENSE_NO_STRING);
-            String specialization = InputPrompter.promptString("Enter specialization: ");
+            String medLicence = InputPrompter.promptValidatedString("Enter medical licence number: ", Validator.MEDICAL_LICENSE_NO);
+            String specialization = InputPrompter.promptValidatedString("Enter specialization: ", Validator.NOT_EMPTY);
 
             Doctor doctorToAdd = new Doctor(pData[0], pData[1], pData[2], pData[3], medLicence, specialization);
 
@@ -109,15 +118,10 @@ public class WestminsterSkinConsultationManager implements SkinConsultationManag
     }
 
     @Override
-    public void updateDoctor() {
-
-    }
-
-    @Override
     public void removeDoctor() {
         try {
             ConsoleLog.logWithColors(ConsoleColors.RED_BOLD_BRIGHT, "Deleting doctor...");
-            String medLicence = InputPrompter.promptValidatedString("Enter medical licence number: ", Validator.MEDICAL_LICENSE_NO_STRING);
+            String medLicence = InputPrompter.promptValidatedString("Enter medical licence number: ", Validator.MEDICAL_LICENSE_NO);
             Object[] doctorsToRemove = this.doctors.stream().filter((Doctor d) -> d.getMedicalLicenceNo().equals(medLicence)).toArray();
 
             //assuming there's only one doctor possible from a medical licence number
@@ -138,39 +142,32 @@ public class WestminsterSkinConsultationManager implements SkinConsultationManag
     }
 
     @Override
-    public Doctor getAvailableDoctor(String specialization, LocalDateTime dateTime) {
-        List<Doctor> availableDoctors =  this.doctors.stream().filter(doctor -> doctor.getSpecialization().equals(specialization) && doctor.getAvailability(dateTime)).collect(Collectors.toList());
-        if(availableDoctors.isEmpty()) return null;
-        // Generate a random integer to select the doctor
-        int randomIndex = (int) Math.round(Math.random() * (availableDoctors.size() - 1));
-        return availableDoctors.get(randomIndex);
-    }
-
-    @Override
     public void viewDoctors() {
         if (this.doctors.isEmpty()) {
             ConsoleLog.info("Doctors list is empty! Please add some doctors before viewing...");
             return;
         }
 
-        ConsoleLog.logWithColors(ConsoleColors.CYAN_BOLD_BRIGHT, "Viewing doctors...");
+        ConsoleLog.logWithColors(ConsoleColors.CYAN_BOLD_BRIGHT, "Viewing doctors sorted by last name...");
         ArrayList<Doctor> doctors = this.getDoctors();
-        doctors.sort(new DoctorNameComparator());
+        doctors.sort(new DoctorSurnameComparator());
 
         CommandLineTable ct = new CommandLineTable();
         ct.setShowVerticalLines(true);
         ct.setRightAlign(false);
-        ct.setHeaders("Medical Licence No.", "Name", "Surname", "Date of Birth", "Contact No.", "Specialization");
+        ct.setHeaders("Medical Licence No.", "Surname", "First Name", "Date of Birth", "Contact No.", "Specialization");
         for (Doctor d : doctors) {
-            ct.addRow(d.getMedicalLicenceNo(), d.getName(), d.getSurname(), d.getDob().toString(), d.getContactNo(), d.getSpecialization());
+            ct.addRow(d.getMedicalLicenceNo(), d.getSurname(), d.getName(), d.getDob().toString(), d.getContactNo(), d.getSpecialization());
         }
         ct.print();
     }
 
+    @Override
     public void launchGUI() {
         GUIApplication.start(this);
     }
 
+    @Override
     public void addPatient(Patient patientToAdd) {
         this.patients.add(patientToAdd);
     }
@@ -183,7 +180,7 @@ public class WestminsterSkinConsultationManager implements SkinConsultationManag
 
             AlertBox.showInformationAlert(String.format(
                 "New consultation added successfully! Patient UID: %s\nPlease use the patient UID to access the consultation\nApproximate consultation date time: %s",
-                consultation.getPatient().getUid(), consultation.getConsultationDateTime().format(Formats.DATE_TIME_OUTPUT_FORMAT)
+                consultation.getPatient().getUID(), consultation.getConsultationDateTime().format(Formats.DATE_TIME_OUTPUT_FORMAT)
             ));
 
         } catch (IllegalConsultationException e) {
@@ -198,12 +195,12 @@ public class WestminsterSkinConsultationManager implements SkinConsultationManag
     public void cancelConsultation(Consultation consultation) {
         if (consultation == null) return;
         boolean shouldCancel = AlertBox.showConfirmationAlert(String.format("Are you sure you want to " +
-                "cancel the consultation of patient %s?", consultation.getPatient().getUid()));
+                "cancel the consultation of patient %s?", consultation.getPatient().getUID()));
 
         if (!shouldCancel) {
-            AlertBox.showWarningAlert(String.format("Consultation of patient %s will not be cancelled!", consultation.getPatient().getUid()));
+            AlertBox.showWarningAlert(String.format("Consultation of patient %s will not be cancelled!", consultation.getPatient().getUID()));
         } else {
-            ConsoleLog.success(String.format("Consultation of patient %s has been successfully cancelled!", consultation.getPatient().getUid()));
+            ConsoleLog.success(String.format("Consultation of patient %s has been successfully cancelled!", consultation.getPatient().getUID()));
             this.consultations.remove(consultation);
             consultation.getDoctor().getConsultations().remove(consultation);
             // clear asset files if any available
@@ -211,6 +208,7 @@ public class WestminsterSkinConsultationManager implements SkinConsultationManag
         }
     }
 
+    @Override
     public void saveToFile() {
         try (
                 FileOutputStream fileOut = new FileOutputStream("./data/consultationManager.ser");
@@ -223,6 +221,7 @@ public class WestminsterSkinConsultationManager implements SkinConsultationManag
         }
     }
 
+    @Override
     public void loadFromFile() {
         try (
                 FileInputStream fileIn = new FileInputStream("./data/consultationManager.ser");
@@ -279,7 +278,7 @@ public class WestminsterSkinConsultationManager implements SkinConsultationManag
 
         while (!shouldQuit) {
             this.printMainMenu();
-            mainMenuInput = InputPrompter.promptValidatedString(promptMessage, new Validator<String>() {
+            mainMenuInput = InputPrompter.promptValidatedString(promptMessage, new Validator<String>("Input does not match the allowed values") {
                 @Override
                 public boolean validate(String input) {
                     ArrayList<String> allowed = new ArrayList<>(Arrays.asList("A", "D", "V", "S", "L", "G", "Q"));
