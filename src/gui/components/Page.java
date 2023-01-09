@@ -6,6 +6,15 @@ import util.ConsoleLog;
 
 public abstract class Page extends StackPane {
     private Page prevPage;
+    private Page prevNavigationRedirect = null;
+
+    public Page getPrevNavigationRedirect() {
+        return prevNavigationRedirect;
+    }
+
+    public void setPrevNavigationRedirect(Page prevNavigationRedirect) {
+        this.prevNavigationRedirect = prevNavigationRedirect;
+    }
 
     public Page() {
         super();

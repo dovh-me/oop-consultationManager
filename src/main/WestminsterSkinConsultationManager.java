@@ -83,8 +83,8 @@ public class WestminsterSkinConsultationManager implements SkinConsultationManag
         return this.doctors.stream().filter((Doctor d) -> d.getMedicalLicenceNo().equals(medLicence)).findFirst();
     }
 
-    public Doctor getAvailableDoctor(String specialization, LocalDateTime dateTime) {
-        List<Doctor> availableDoctors =  this.doctors.stream().filter(doctor -> doctor.getSpecialization().equals(specialization) && doctor.getAvailability(dateTime)).collect(Collectors.toList());
+    public Doctor getAvailableDoctor(String specialization, LocalDateTime dateTime, int duration) {
+        List<Doctor> availableDoctors =  this.doctors.stream().filter(doctor -> doctor.getSpecialization().equals(specialization) && doctor.getAvailability(dateTime, duration)).collect(Collectors.toList());
         if(availableDoctors.isEmpty()) return null;
         // Generate a random integer to select the doctor
         int randomIndex = (int) Math.round(Math.random() * (availableDoctors.size() - 1));

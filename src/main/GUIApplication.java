@@ -95,7 +95,7 @@ public class GUIApplication extends Application{
         StackPane root = new StackPane();
         primaryStage.getIcons().add(new Image("/assets/stethoscope.png"));
         primaryStage.setScene(new Scene(root, 800, 800));
-        primaryStage.setAlwaysOnTop(true);
+        primaryStage.setAlwaysOnTop(false);
         primaryStage.setFullScreen(true);
         primaryStage.setFullScreenExitHint("");
         primaryStage.show();

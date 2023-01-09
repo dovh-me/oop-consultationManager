@@ -29,6 +29,7 @@ public class ViewConsultation extends Page {
     public static SimpleObjectProperty<Consultation> consultationSimpleObjectProperty = new SimpleObjectProperty<>();
 
     public ViewConsultation() {
+        super.setPrevNavigationRedirect(GUIApplication.app.getViewConsultations());
         GridPane mainPane = createGeneralGridPane();
         mainPane.setVgap(10);
         mainPane.setHgap(5);

@@ -3,16 +3,11 @@ package gui.pages;
 import constants.Formats;
 import exceptions.CryptoException;
 import exceptions.IllegalConsultationException;
-import gui.components.AddPatientFormPopup;
-import gui.components.CNotesInputGroup;
-import gui.components.Page;
-import gui.components.PatientsTable;
-import javafx.geometry.Insets;
-import models.Consultation;
-import models.Doctor;
-import models.Patient;
+import gui.components.*;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
+import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
@@ -24,6 +19,9 @@ import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
 import main.GUIApplication;
+import models.Consultation;
+import models.Doctor;
+import models.Patient;
 import util.AlertBox;
 import util.ConsoleLog;
 
@@ -35,15 +33,17 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 
 public class AddConsultation extends Page {
+    private static final SimpleIntegerProperty consultationDurationProperty = new SimpleIntegerProperty(0);
     private static final SimpleObjectProperty<Patient> patientProperty = new SimpleObjectProperty<>();
     private static final SimpleObjectProperty<Doctor> doctorProperty = new SimpleObjectProperty<>();
     private static final SimpleObjectProperty<LocalDateTime> consultationDateTimeProperty = new SimpleObjectProperty<>();
     private static final SimpleStringProperty validationMessageProperty = new SimpleStringProperty();
     private CNotesInputGroup notes;
     private PatientsTable patientsTable;
-
+    private Label costLabel;
 
     public AddConsultation() {
+        super.setPrevNavigationRedirect(GUIApplication.app.getCheckAvailability());
         ColumnConstraints percentWidthConstraint = new ColumnConstraints();
         percentWidthConstraint.setPercentWidth(50);
         GridPane mainPanel = createGeneralGridPane();
@@ -138,11 +138,20 @@ public class AddConsultation extends Page {
                 patientName.setText("--");
                 dateOfBirth.setText("--");
                 contactNo.setText("--");
+                costLabel.setText("0.0");
+
                 return;
             }
             patientName.setText(newValue.getFullName());
             dateOfBirth.setText(newValue.getDob().format(Formats.DATE_FORMATTER));
             contactNo.setText(newValue.getContactNo());
+            // set the hourly rate for the patient
+            try {
+                double hourlyRate = newValue.getConsultationRate(consultationDateTimeProperty.get());
+                costLabel.setText(Double.toString(hourlyRate * consultationDurationProperty.get()));
+            } catch (IllegalConsultationException e) {
+                throw new RuntimeException(e);
+            }
         });
 
         return innerGridPane;
@@ -151,7 +160,6 @@ public class AddConsultation extends Page {
     private StackPane initPatientTable() {
         StackPane pane = new StackPane();
         this.patientsTable = new PatientsTable();
-
         this.patientsTable.setTableRowSelectionListener((observable, oldValue, newValue) -> {
             AddConsultation.patientProperty.set(newValue);
         });
@@ -173,11 +181,18 @@ public class AddConsultation extends Page {
         Label titleLabel = createSectionTitleLabel("Consultation Information");
         Label consultationDateTimeLabel = new Label("--");
         this.notes = new CNotesInputGroup("Notes");
+        this.costLabel = new Label("0.00");
+        Label consultationDurationLabel = new Label("0h");
+
+        ColumnConstraints columnConstraints = new ColumnConstraints();
+        columnConstraints.setPercentWidth(50);
 
         // Add consultation date time
         pane.add(titleLabel, 0,0,2,1);
         pane.addRow(1,new Label("Consultation Date Time:"), consultationDateTimeLabel);
-        pane.add(this.notes,0,2,2,1);
+        pane.addRow(2, new Label("Cost (£)"), this.costLabel);
+        pane.addRow(3,new Label("Consultation Duration"),consultationDurationLabel);
+        pane.add(this.notes,0,4,2,1);
 
         AddConsultation.consultationDateTimeProperty.addListener((observable, oldValue, newValue) -> {
             if(newValue == null) {
@@ -188,6 +203,14 @@ public class AddConsultation extends Page {
             consultationDateTimeLabel.setText(
                     LocalDate.from(newValue).format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + " / " + LocalTime.from(newValue).format(DateTimeFormatter.ofPattern("hh:mm a"))
             );
+        });
+
+        consultationDurationProperty.addListener((observable, oldValue, newValue) -> {
+            if(newValue == null) {
+                consultationDateTimeLabel.setText("0h");
+                return;
+            }
+            consultationDurationLabel.setText(consultationDurationProperty.get() > 0?consultationDurationProperty.get() + "h": "0h");
         });
 
         return pane;
@@ -203,12 +226,18 @@ public class AddConsultation extends Page {
         addConsultationButton.setOnAction((event -> {
             try {
                 validationMessageProperty.set(null);
-                if( patientProperty.get() == null) throw new IllegalConsultationException("Patient not selected");
+                if(patientProperty.get() == null) throw new IllegalConsultationException("Patient not selected");
                 if(doctorProperty.get() == null) throw new IllegalConsultationException("Doctor not selected");
+                if(consultationDurationProperty.get() <= 0) throw new IllegalConsultationException("Consultation duration should be higher than zero");
+
                 Consultation c = getPatientInfoData();
                 if(c == null){
                     throw new IllegalConsultationException("Error creating consultation");
                 }
+
+                float cost = !this.costLabel.getText().isEmpty() ? Float.parseFloat(this.costLabel.getText()) : 0;
+                c.setCost(cost);
+                c.setConsultationDuration(consultationDurationProperty.get());
                 GUIApplication.app.manager.addConsultation(c);
                 GUIApplication.app.af.navigateTo(GUIApplication.app.getMainMenu());
             } catch (Exception e) {
@@ -267,6 +296,7 @@ public class AddConsultation extends Page {
         super.onNavigation();
         AddConsultation.doctorProperty.set(CheckAvailability.doctor);
         AddConsultation.consultationDateTimeProperty.set(CheckAvailability.consultationDateTime);
+        AddConsultation.consultationDurationProperty.set(CheckAvailability.consultationDuration);
     }
 
     @Override
@@ -276,6 +306,7 @@ public class AddConsultation extends Page {
         doctorProperty.set(null);
         consultationDateTimeProperty.set(null);
         validationMessageProperty.set(null);
+        consultationDurationProperty.set(0);
         notes.resetFields();
         this.patientsTable.resetTableSelection();
     }

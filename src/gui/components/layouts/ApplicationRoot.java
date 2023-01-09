@@ -68,6 +68,7 @@ public class ApplicationRoot extends BorderPane {
         this.activePage.setVisible(false);
         this.activePage.onExit();
         Page prevPage = this.activePage.getPrevPage();
+        prevPage = prevPage.getPrevNavigationRedirect() != null? prevPage.getPrevNavigationRedirect(): prevPage;
         this.setActivePage(prevPage);
         if(prevPage != null) prevPage.setVisible(true);
         this.activePage.onNavigation();

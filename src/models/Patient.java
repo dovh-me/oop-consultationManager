@@ -1,9 +1,15 @@
 package models;
 
+import exceptions.IllegalConsultationException;
+import main.GUIApplication;
+
 import java.io.Serializable;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 public class Patient extends Person implements Serializable {
     public static String[] tableColumns = new String[] {"Patient UID." ,"Full Name", "Date of Birth", "Contact No."};
@@ -25,6 +31,22 @@ public class Patient extends Person implements Serializable {
 
     private String generateUID() {
         return "p" + String.valueOf(UUID.randomUUID());
+    }
+
+    public double getConsultationRate(LocalDateTime consultationDateTime) throws IllegalConsultationException {
+        final double FIRST_CONSULTATION_PRICE = 15;
+        final double CONSULTATION_PRICE = 25;
+
+        double price = FIRST_CONSULTATION_PRICE;
+        // Check if current consultation is the first consultation of the patient
+        List<Consultation> consultations = GUIApplication.app.manager.getConsultations().stream().filter((e) -> e.getPatient().equals(this)).collect(Collectors.toList());
+
+
+            if (consultations.size() > 0) {
+                price = CONSULTATION_PRICE;
+            }
+
+        return price;
     }
 
     @Override

@@ -11,6 +11,7 @@ import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.GridPane;
 import main.GUIApplication;
 import models.Doctor;
+import util.ConsoleLog;
 import util.Validator;
 
 import java.time.LocalDate;
@@ -22,6 +23,7 @@ import java.util.Optional;
 public class CheckAvailability extends Page {
     public static Doctor doctor;
     public static LocalDateTime consultationDateTime;
+    public static int consultationDuration;
     private CDatePickerInputGroup consultationDate;
     private CTimeFieldInputGroup consultationTime;
     private CTextFieldInputGroup doctorMedLicNo;
@@ -30,6 +32,7 @@ public class CheckAvailability extends Page {
 
     private Label validationMessage;
     private Button continueButton;
+    private CTextFieldInputGroup consultationDurationInput;
 
     public CheckAvailability() {
         GridPane mainPane = createGeneralGridPane();
@@ -49,7 +52,8 @@ public class CheckAvailability extends Page {
     }
 
     public void loadDoctor() {
-        this.doctorMedLicNo.getInputField().setText(CheckAvailability.doctor.getMedicalLicenceNo());
+        if(CheckAvailability.doctor.getMedicalLicenceNo() != null)
+            this.doctorMedLicNo.getInputField().setText(CheckAvailability.doctor.getMedicalLicenceNo());
     }
 
     private GridPane initAvailabilityPanel() {
@@ -64,6 +68,13 @@ public class CheckAvailability extends Page {
         this.doctorMedLicNo = new CTextFieldInputGroup(
                 "Medical Licence No:", new Validator[]{}, new Validator[]{Validator.NOT_EMPTY, Validator.MEDICAL_LICENSE_NO});
         Button checkAvailabilityButton = new Button("Check Availability");
+        this.consultationDurationInput = new CTextFieldInputGroup("Consultation Duration (h)", new Validator[]{ Validator.NUMBERS_ONLY }, new Validator[]{Validator.NOT_EMPTY, new Validator<String>("Should be within range 0-24") {
+            @Override
+            public boolean validate(String input) {
+                return Integer.parseInt(input) > 0 && Integer.parseInt(input) < 24;
+            }
+        }});
+
 
         titleLabel.setStyle("-fx-font-weight: bold;");
         columnConstraints.setPercentWidth(60);
@@ -73,50 +84,72 @@ public class CheckAvailability extends Page {
         this.consultationDate.setGroupPaneColumnConstraints(columnConstraints, columnConstraints);
         this.consultationTime.setGroupPaneColumnConstraints(columnConstraints, columnConstraints);
         this.doctorMedLicNo.setGroupPaneColumnConstraints(columnConstraints, columnConstraints);
+        this.consultationDurationInput.setGroupPaneColumnConstraints(columnConstraints, columnConstraints);
 
         // Initialise the action buttons
         checkAvailabilityButton.setStyle("-fx-background-color: #fe2c54; -fx-text-fill: white;");
         checkAvailabilityButton.setOnAction((event) -> {
-            this.showValidationMessage("", "-fx-background-color: red;");
-            if(!this.validateAvailabilityPanelInput()) {showValidationMessage("Invalid inputs. Availability not checked", "-fx-text-fill: red");return;}
-
-            Optional<Doctor> optional = GUIApplication.app.manager.findDoctor(this.doctorMedLicNo.getInput());
-            if(!optional.isPresent()) {
-                showValidationMessage("Medical licence number not found in the system. Please check again", "-fx-text-fill: red");
-                return;
-            }
-            Doctor doctor = optional.get();
-            // When this segment is executed the inputs are expected to be already validated
-            LocalDateTime consultationDateTime = LocalDateTime.of(this.consultationDate.getInput(), this.consultationTime.getInput());
-
-            // Show the error message if the consultation being booked for a past date time
-            if(consultationDateTime.isBefore(LocalDateTime.now())) {
-                showValidationMessage("Consultation cannot be booked for date and times from the past", "-fx-text-fill: red");
-                return;
-            }
-
-            if(!doctor.getAvailability(consultationDateTime)){
-                doctor = GUIApplication.app.manager.getAvailableDoctor(optional.get().getSpecialization(), consultationDateTime);
-                if(doctor == null) {
-                    showValidationMessage("No doctors available for the selected date time: " + consultationDateTime.format(Formats.DATE_TIME_OUTPUT_FORMAT), "-fx-text-fill: red");
-                    loadInfoPanelData(false, optional.get());
-                    CheckAvailability.doctor = null;
+            try {
+                this.showValidationMessage("", "-fx-background-color: red;");
+                if (!this.validateAvailabilityPanelInput()) {
+                    showValidationMessage("Invalid inputs. Availability not checked", "-fx-text-fill: red");
                     return;
-                } else {
-                    showValidationMessage(String.format("Selected doctor not available: %s. System has selected a available doctor", doctorMedLicNo), "-fx-text-fill: blue;");
                 }
+
+                int consultationDuration = Integer.parseInt(consultationDurationInput.getInput());
+
+                Optional<Doctor> optional = GUIApplication.app.manager.findDoctor(this.doctorMedLicNo.getInput());
+                if (!optional.isPresent()) {
+                    showValidationMessage("Medical licence number not found in the system. Please check again", "-fx-text-fill: red");
+                    return;
+                }
+                Doctor doctor = optional.get();
+                // When this segment is executed the inputs are expected to be already validated
+                LocalDateTime consultationDateTime = LocalDateTime.of(this.consultationDate.getInput(), this.consultationTime.getInput());
+
+                // check if the consultation starts and ends within the same day
+                if (!LocalDate.from(consultationDateTime).isEqual(LocalDate.from(consultationDateTime.plusHours(consultationDuration))))  {
+                    showValidationMessage("Consultation start and time should be within the same day", "-fx-text-fill: red");
+                    return;
+                }
+
+                // Show the error message if the consultation being booked for a past date time
+                if (consultationDateTime.isBefore(LocalDateTime.now())) {
+                    showValidationMessage("Consultation cannot be booked for date and times from the past", "-fx-text-fill: red");
+                    return;
+                }
+
+                if (!doctor.getAvailability(consultationDateTime, consultationDuration)) {
+                    doctor = GUIApplication.app.manager.getAvailableDoctor(optional.get().getSpecialization(), consultationDateTime, consultationDuration);
+                    if (doctor == null) {
+                        showValidationMessage("No doctors available for the selected date time: " + consultationDateTime.format(Formats.DATE_TIME_OUTPUT_FORMAT), "-fx-text-fill: red");
+                        loadInfoPanelData(false, optional.get());
+                        CheckAvailability.doctor = null;
+                        return;
+                    } else {
+                        showValidationMessage(String.format("Selected doctor not available: %s. System has selected a available doctor", doctorMedLicNo.getInput()), "-fx-text-fill: blue;");
+                    }
+                }
+                loadInfoPanelData(true, doctor);
+                this.continueButton.setDisable(false);
+                CheckAvailability.consultationDuration = consultationDuration;
+                CheckAvailability.doctor = doctor;
+                CheckAvailability.consultationDateTime = consultationDateTime;
+            }catch (NumberFormatException e) {
+                showValidationMessage("Invalid consultation duration", "-fx-text-fill: red;");
             }
-            loadInfoPanelData(true, doctor);
-            this.continueButton.setDisable(false);
-            CheckAvailability.doctor = doctor;
-            CheckAvailability.consultationDateTime = consultationDateTime;
+            catch (Exception e) {
+                showValidationMessage("Unexpected error occurred. Please try again", "-fx-text-fill: red;");
+                ConsoleLog.error(e.getLocalizedMessage());
+            }
         });
 
         availabilityPanel.add(titleLabel,0,0,2,1);
         availabilityPanel.add(this.consultationDate, 0,1);
         availabilityPanel.add(this.consultationTime, 0,2);
         availabilityPanel.add(this.doctorMedLicNo, 0, 3);
-        availabilityPanel.add(checkAvailabilityButton, 0,4,2,1);
+        availabilityPanel.add(this.consultationDurationInput, 0, 4);
+        availabilityPanel.add(checkAvailabilityButton, 0,5,2,1);
 
         return availabilityPanel;
     }
@@ -222,11 +255,11 @@ public class CheckAvailability extends Page {
     }
 
     private boolean validateAvailabilityPanelInput() {
-        // TODO: validate the consultation date time, to be only possible for future
         boolean isValid;
         isValid = this.doctorMedLicNo.validateInput();
-        isValid = this.consultationDate.validateInput() & isValid;
-        isValid = this.consultationTime.validateInput() & isValid;
+        isValid = this.consultationDate.validateInput() && isValid;
+        isValid = this.consultationTime.validateInput() && isValid;
+        isValid = this.consultationDurationInput.validateInput() && isValid;
         return isValid;
     }
 
