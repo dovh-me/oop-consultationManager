@@ -4,20 +4,19 @@ import constants.Formats;
 import exceptions.CryptoException;
 import exceptions.IllegalConsultationException;
 import javafx.geometry.Insets;
-import javafx.scene.image.Image;
-import models.Consultation;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.image.Image;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import models.Consultation;
 import util.AlertBox;
 import util.ConsoleLog;
-import util.Validator;
 
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
@@ -25,7 +24,6 @@ import java.security.NoSuchAlgorithmException;
 public class UpdateConsultationPopup extends Stage {
     private final Consultation consultation;
     private Label costLabel;
-    private CTextFieldInputGroup calculateCost;
     private CNotesInputGroup notes;
 
     public UpdateConsultationPopup(Consultation consultationToUpdate) {
@@ -44,14 +42,13 @@ public class UpdateConsultationPopup extends Stage {
         this.setTitle("Update Consultation | " + this.consultation.getConsultationUID());
         this.setAlwaysOnTop(true);
         this.setResizable(true);
-        this.setScene(new Scene(root, 705,600));
+        this.setScene(new Scene(root, 705,550));
     }
 
     private GridPane initUpdateConsultationForm() {
         GridPane pane = new GridPane();
         Label titleLabel = new Label("Update Consultation");
         this.costLabel = new Label(Float.toString(this.consultation.getCost()));
-        this.calculateCost = new CTextFieldInputGroup("Calculate Cost", new Validator[]{ Validator.NUMBERS_ONLY }, new Validator[]{});
         this.notes = new CNotesInputGroup("Notes");
         try {
             this.notes.setImageNotes(this.consultation.getNoteImages());
@@ -69,27 +66,10 @@ public class UpdateConsultationPopup extends Stage {
         pane.getColumnConstraints().addAll(columnConstraints, columnConstraints);
         this.notes.getColumnConstraints().removeIf((e) -> true);
         this.notes.getColumnConstraints().addAll(columnConstraints, columnConstraints);
-        this.calculateCost.getColumnConstraints().addAll(columnConstraints, columnConstraints, new ColumnConstraints(100));
-
-        this.calculateCost.getInputField().setPromptText("No. of hours");
-        Button calculateCostButton = new Button("Get Cost");
-        calculateCostButton.setOnAction(event -> {
-            try {
-                if(!validateInputs()) return;
-                double hourlyRate = consultation.getHourlyCost();
-                int cost = this.calculateCost.getInput().isEmpty()? 0: Integer.parseInt(this.calculateCost.getInput());
-                this.costLabel.setText(String.valueOf(hourlyRate * cost));
-            } catch (IllegalConsultationException e) {
-                ConsoleLog.error(e.getLocalizedMessage());
-                AlertBox.showErrorAlert(e.getLocalizedMessage());
-            }
-        });
-        this.calculateCost.add(calculateCostButton,2,1);
 
         pane.add(titleLabel,0,0,2,1);
         pane.addRow(1, new Label("Consultation Date/Time: "), new Label(this.consultation.getConsultationDateTime().format(Formats.DATE_TIME_OUTPUT_FORMAT)));
         pane.addRow(2, new Label("Cost"), this.costLabel);
-        pane.add(this.calculateCost,0,3,2,1);
         pane.add(this.notes, 0,4,2,1);
 
         return pane;
@@ -132,10 +112,5 @@ public class UpdateConsultationPopup extends Stage {
         );
 
         return pane;
-    }
-
-    private boolean validateInputs() {
-        // notes inputs are already validated internally
-        return  this.calculateCost.validateInput();
     }
 }

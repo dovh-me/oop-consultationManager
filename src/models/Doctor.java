@@ -57,22 +57,31 @@ public class Doctor extends Person implements Serializable {
         this.consultations.add(c);
     }
 
-    public boolean getAvailability(LocalDateTime ldt) {
-        List<Consultation> consultations = this.findConsultationsByDate(LocalDate.from(ldt));
+    public boolean getAvailability(LocalDateTime newConsultationStart, int duration) {
+        List<Consultation> consultations = this.findConsultationsByDate(LocalDate.from(newConsultationStart));
+
+        LocalDateTime newConsultationEnd = newConsultationStart.plusHours(duration);
 
         // Return false if the time slot is before the current time
-        if(LocalDateTime.now().isAfter(ldt)) return false;
+        if(LocalDateTime.now().isAfter(newConsultationStart)) return false;
         // Return false if the time slot is not within the consultation times
-        if(this.consultationEnd.isBefore(LocalTime.from(ldt))) return false;
-        if(this.consultationStart.isAfter(LocalTime.from(ldt))) return false;
+        if(this.consultationEnd.isBefore(LocalTime.from(newConsultationStart)) || this.consultationEnd.isBefore(LocalTime.from(newConsultationEnd))) return false;
+        if(this.consultationStart.isAfter(LocalTime.from(newConsultationStart))) return false;
 
         // Check if the new consultation is clashing with existing ones
         for (Consultation consultation : consultations) {
-            LocalDateTime currDateTime = LocalDateTime.of(LocalDate.from(consultation.getConsultationDateTime()), LocalTime.from(consultation.getConsultationDateTime()));
+            LocalDateTime currDateTime = consultation.getConsultationDateTime();
             // Return false if consultation being checked is not one hour before or after the current consultation being placed
-            if(currDateTime.isEqual(ldt)) return false;
-            if(currDateTime.isAfter(ldt) && !currDateTime.isAfter(ldt.plusMinutes(58))) return false;
-            if(currDateTime.isBefore(ldt) && !currDateTime.isBefore(ldt.minusMinutes(58))) return false;
+            if(currDateTime.isEqual(newConsultationStart)) return false;
+            if(
+                    currDateTime.isBefore(newConsultationStart) &&
+                            !currDateTime.plusHours(consultation.getConsultationDuration()).isBefore(newConsultationStart)
+            ) return false;
+
+            if(
+                    currDateTime.isAfter(newConsultationStart) &&
+                            !currDateTime.isAfter(newConsultationStart.plusHours(duration).minusMinutes(2))
+            ) return false;
         }
 
         return true;

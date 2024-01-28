@@ -19,11 +19,10 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class Consultation implements Serializable, Comparable<Consultation>, TabularModel {
-    public static String[] tableColumns = new String[]{"Date Time", "Consultation UID", "Patient UID", "Patient Name", "Doctor Name", "Specialization", "Cost"};
-    public static String[] tableFieldNames = new String[]{"consultationDateTime", "consultationUID", "patientUID", "patientName", "doctorName", "specialization", "cost"};
+    public static String[] tableColumns = new String[]{"Date Time", "Consultation UID", "Patient UID", "Patient Name", "Doctor Name", "Specialization", "Cost", "Consultation Duration"};
+    public static String[] tableFieldNames = new String[]{"consultationDateTime", "consultationUID", "patientUID", "patientName", "doctorName", "specialization", "cost", "consultationDuration"};
     private String consultationUID;
     private LocalDateTime consultationDateTime; // create a new constructor with this field
     private float cost;
@@ -32,7 +31,7 @@ public class Consultation implements Serializable, Comparable<Consultation>, Tab
     private Patient patient;
     private Doctor doctor;
     private SecretKey encryptKey;
-    private int noteImageIndex;
+    private int consultationDuration;
 
     public Consultation() {
     }
@@ -162,25 +161,6 @@ public class Consultation implements Serializable, Comparable<Consultation>, Tab
         this.cost = cost;
     }
 
-    public double getHourlyCost() throws IllegalConsultationException {
-        final double FIRST_CONSULTATION_PRICE = 15;
-        final double CONSULTATION_PRICE = 25;
-
-        double price = FIRST_CONSULTATION_PRICE;
-        if (this.getPatient() == null) throw new IllegalConsultationException("Patient not found");
-        // Check if current consultation is the first consultation of the patient
-        List<Consultation> consultations = GUIApplication.app.manager.getConsultations().stream().filter((e) -> e.getPatient().equals(this.getPatient())).collect(Collectors.toList());
-
-        for (Consultation consultation : consultations) {
-            if (this.getConsultationDateTime().isAfter(consultation.getConsultationDateTime())) {
-                price = CONSULTATION_PRICE;
-                break;
-            }
-        }
-
-        return price;
-    }
-
     public String getTextNotes() throws NoSuchAlgorithmException, IOException, CryptoException {
         File textNotesFile = this.textNotes;
         // Decrypting the content
@@ -241,6 +221,14 @@ public class Consultation implements Serializable, Comparable<Consultation>, Tab
             consultationUID = String.format("c%5d", GUIApplication.app.manager.getConsultationIdIndex()).replace(' ', '0');
         }
         return consultationUID;
+    }
+
+    public int getConsultationDuration() {
+        return consultationDuration;
+    }
+
+    public void setConsultationDuration(int consultationDuration) {
+        this.consultationDuration = consultationDuration;
     }
 
     @Override

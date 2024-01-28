@@ -26,7 +26,7 @@ public class PatientsTable extends StackPane {
         TextField searchBar = initSearchbar();
         this.addPatientButton = initActionButtons();
         this.mainContentPanel = new TableWithActionButtonsPanel<>(Patient.tableFieldNames, Patient.tableColumns, GUIApplication.app.manager.getPatients(), addPatientButton);
-        this.mainContentPanel.getTable().setMaxHeight(600);
+        this.mainContentPanel.getTable().setPrefHeight(300);
         borderPane.setTop(searchBar);
         borderPane.setCenter(mainContentPanel);
         this.getChildren().add(borderPane);

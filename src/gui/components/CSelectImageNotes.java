@@ -32,9 +32,9 @@ public class CSelectImageNotes extends VBox {
         halfConstraint.setPercentWidth(50);
         this.recordPane = new VBox();
         ScrollPane scrollWrapper = new ScrollPane();
-        scrollWrapper.setVmax(110);
-        scrollWrapper.setMinHeight(110);
-        scrollWrapper.setMaxHeight(110);
+        scrollWrapper.setVmax(160);
+        scrollWrapper.setMinHeight(160);
+        scrollWrapper.setMaxHeight(160);
         scrollWrapper.setMinWidth(420);
         scrollWrapper.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
         scrollWrapper.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);

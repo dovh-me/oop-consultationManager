@@ -1,7 +1,6 @@
 package gui.components.layouts;
 
 import gui.components.TabularModel;
-import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
@@ -47,7 +46,8 @@ public class TableWithActionButtonsPanel<T extends TabularModel> extends BorderP
 
     public void loadTableData(List<T> tableData) {
         // Get data to populate in the table
-        this.table.setItems(FXCollections.observableList(tableData));
+        this.table.getItems().removeIf((e) -> true);
+        this.table.getItems().addAll(tableData);
 
         this.table.setVisible(false);
         table.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
