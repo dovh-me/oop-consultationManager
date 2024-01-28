@@ -1,15 +1,14 @@
 package util;
 
-import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 
 public class InputPrompter {
-    private static final Scanner SCANNER = new Scanner(System.in);
+    private static Scanner scanner = new Scanner(System.in);
 
     public static String promptString(String m) throws NoSuchElementException {
         ConsoleLog.log(m, true);
-        return InputPrompter.SCANNER.nextLine().trim();
+        return InputPrompter.scanner.nextLine().trim();
     }
 
     public static String promptValidatedString(String promptMessage, Validator<String> v) {
@@ -17,6 +16,8 @@ public class InputPrompter {
         while(true) {
             input =  InputPrompter.promptString(promptMessage);
             if(v.validate(input)) break;
+            if(v.getValidationMessage() != null || !v.getValidationMessage().isEmpty())
+                ConsoleLog.error(v.getValidationMessage());
             ConsoleLog.error("Invalid input. Please enter a valid input to continue.");
         }
 
@@ -59,5 +60,9 @@ public class InputPrompter {
 
             ConsoleLog.error(String.format("Provided float value is out of range. Please provide a float between %f and %f", rangeStart, rangeEnd), true);
         }
+    }
+
+    public static void setScanner(Scanner scanner) {
+        InputPrompter.scanner = scanner;
     }
 }

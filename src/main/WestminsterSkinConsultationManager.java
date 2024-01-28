@@ -1,28 +1,33 @@
 package main;
 
 import constants.Formats;
-import exceptions.DailyConsultationsFullException;
-import gui.models.Consultation;
-import gui.models.Doctor;
-import gui.models.Patient;
-import gui.pages.Application;
+import exceptions.IllegalConsultationException;
+import exceptions.IllegalDoctorException;
+import models.Consultation;
+import models.Doctor;
+import models.Patient;
 import util.*;
 
 import java.io.*;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class WestminsterSkinConsultationManager implements SkinConsultationManager, Serializable {
-
     private ArrayList<Doctor> doctors;
     private ArrayList<Consultation> consultations;
+    private ArrayList<Patient> patients;
+    private int consultationIdIndex;
 
     public WestminsterSkinConsultationManager() {
         this.doctors = new ArrayList<>(10);
         this.consultations = new ArrayList<>();
+        this.patients = new ArrayList<>();
+        this.consultationIdIndex = 1;
     }
 
     private void printMainMenu() {
+        System.out.println();
         ConsoleLog.logWithColors(ConsoleColors.BLUE_BACKGROUND, "!WELCOME TO WESTMINSTER SKIN CONSULTATION MANAGER COMMAND LINE INTERFACE!", true);
         System.out.println();
         CommandLineTable st = new CommandLineTable();
@@ -35,9 +40,6 @@ public class WestminsterSkinConsultationManager implements SkinConsultationManag
         st.addRow("Load from File", "L/l");
         st.addRow("Launch in GUI", "G/g");
         st.addRow("--", "--");
-        st.addRow("Add Consultation", "AC/ac");
-        st.addRow("View Consultations", "VC/vc");
-        st.addRow("Cancel Consultation", "CC/cc");
         st.addRow("Quit", "Q/q");
         st.print();
     }
@@ -52,15 +54,6 @@ public class WestminsterSkinConsultationManager implements SkinConsultationManag
                 break;
             case "V":
                 viewDoctors();
-                break;
-            case "AC":
-                addConsultation();
-                break;
-            case "VC":
-                viewConsultations();
-                break;
-            case "CC":
-                cancelConsultation();
                 break;
             case "S":
                 saveToFile();
@@ -78,16 +71,24 @@ public class WestminsterSkinConsultationManager implements SkinConsultationManag
     }
 
     private String[] promptPerson() throws NoSuchElementException {
-        String name = InputPrompter.promptValidatedString("Enter name: ", Validator.LETTER_STRING);
-        String surname = InputPrompter.promptValidatedString("Enter surname: ", Validator.LETTER_STRING);
+        String name = InputPrompter.promptValidatedString("Enter name: ", Validator.ENGLISH_LETTERS_ONLY);
+        String surname = InputPrompter.promptValidatedString("Enter surname: ", Validator.ENGLISH_LETTERS_ONLY);
         String dob = InputPrompter.promptValidatedString("Enter date of birth (format: yyyy-mm-dd): ", Validator.DATE_STRING);
-        String contactNo = InputPrompter.promptValidatedString("Enter contact number: ", Validator.PHONE_NUMBER_STRING);
+        String contactNo = InputPrompter.promptValidatedString("Enter contact number: ", Validator.PHONE_NUMBER);
 
         return new String[]{name, surname, dob, contactNo};
     }
 
-    public Optional<Doctor> findDoctor(String medLicense) {
-        return this.doctors.stream().filter((Doctor d) -> d.getMedicalLicenseNo().equals(medLicense)).findFirst();
+    public Optional<Doctor> findDoctor(String medLicence) {
+        return this.doctors.stream().filter((Doctor d) -> d.getMedicalLicenceNo().equals(medLicence)).findFirst();
+    }
+
+    public Doctor getAvailableDoctor(String specialization, LocalDateTime dateTime, int duration) {
+        List<Doctor> availableDoctors =  this.doctors.stream().filter(doctor -> doctor.getSpecialization().equals(specialization) && doctor.getAvailability(dateTime, duration)).collect(Collectors.toList());
+        if(availableDoctors.isEmpty()) return null;
+        // Generate a random integer to select the doctor
+        int randomIndex = (int) Math.round(Math.random() * (availableDoctors.size() - 1));
+        return availableDoctors.get(randomIndex);
     }
 
     @Override
@@ -100,51 +101,44 @@ public class WestminsterSkinConsultationManager implements SkinConsultationManag
 
             ConsoleLog.logWithColors(ConsoleColors.GREEN_BOLD_BRIGHT, "Adding doctor...");
             String[] pData = this.promptPerson();
-            String medLicense = InputPrompter.promptValidatedString("Enter medical license number: ", Validator.MEDICAL_LICENSE_NO_STRING);
-            String specialization = InputPrompter.promptString("Enter specialization: ");
+            String medLicence = InputPrompter.promptValidatedString("Enter medical licence number: ", Validator.MEDICAL_LICENSE_NO);
+            String specialization = InputPrompter.promptValidatedString("Enter specialization: ", Validator.NOT_EMPTY);
 
-            this.doctors.add(new Doctor(pData[0], pData[1], pData[2], pData[3], medLicense, specialization));
+            Doctor doctorToAdd = new Doctor(pData[0], pData[1], pData[2], pData[3], medLicence, specialization);
 
-            ConsoleLog.logWithColors(ConsoleColors.GREEN, String.format("New doctor added successfully! Med License No: %s", medLicense));
+            if(this.doctors.contains(doctorToAdd)) throw new IllegalDoctorException(String.format("Doctor not added. Duplicated medical licence number: %s.", medLicence));
+            this.doctors.add(doctorToAdd);
+
+            ConsoleLog.success(String.format("New doctor was added successfully! Med Licence No: %s", medLicence));
         } catch (NoSuchElementException e) {
             ConsoleLog.error("There was an error capturing input");
-            e.printStackTrace();
+        } catch (IllegalDoctorException e) {
+            ConsoleLog.error(e.getLocalizedMessage());
         }
-    }
-
-    @Override
-    public void updateDoctor() {
-
     }
 
     @Override
     public void removeDoctor() {
-        ConsoleLog.logWithColors(ConsoleColors.RED_BOLD_BRIGHT, "Deleting doctor...");
-        String medLicense = InputPrompter.promptValidatedString("Enter medical license number: ", Validator.MEDICAL_LICENSE_NO_STRING);
-        Object[] doctorsToRemove = this.doctors.stream().filter((Doctor d) -> d.getMedicalLicenseNo().equals(medLicense)).toArray();
-        for (Object doctor : doctorsToRemove) {
-            Doctor d = (Doctor) doctor;
-            if(!d.getConsultations().isEmpty()) {
-                ConsoleLog.error("Doctor you are trying to delete still has some consultations " +
-                        "assigned on the system. Please cancel the consultations before deleting");
-                return;
-            }
-            this.doctors.remove(doctor);
+        try {
+            ConsoleLog.logWithColors(ConsoleColors.RED_BOLD_BRIGHT, "Deleting doctor...");
+            String medLicence = InputPrompter.promptValidatedString("Enter medical licence number: ", Validator.MEDICAL_LICENSE_NO);
+            Object[] doctorsToRemove = this.doctors.stream().filter((Doctor d) -> d.getMedicalLicenceNo().equals(medLicence)).toArray();
+
+            //assuming there's only one doctor possible from a medical licence number
+            if(doctorsToRemove.length == 0) throw new IllegalDoctorException(String.format("No doctor available in the system with the provided medical licence no: %s", medLicence));
+            else if (doctorsToRemove.length > 1) ConsoleLog.warning(String.format("There seems to be more than one doctor with the medical licence no: %s. Removing the first record.", medLicence));
+
+            this.doctors.remove((Doctor) doctorsToRemove[0]);
+
+            ConsoleLog.success(String.format("Doctor with licence number %s has " +
+                    "been " +
+                    "removed from the system!", medLicence));
+            ConsoleLog.info(String.format("No. of available doctors in the system: %d", this.getDoctors().size()));
+        } catch (IllegalDoctorException e) {
+            ConsoleLog.error(e.getLocalizedMessage());
+        } catch (Exception e) {
+            ConsoleLog.error("There was an unexpected error");
         }
-        ConsoleLog.success(String.format("Doctor with license number %s has " +
-                "been " +
-                "removed from the system!", medLicense));
-    }
-
-    @Override
-    public boolean getDoctorAvailability(Doctor doctor, LocalDate ldt) {
-        return doctor.getAvailableDays().contains(ldt.getDayOfWeek())
-                && doctor.findConsultationsByDate(ldt).size() < doctor.getPatientsPerDay();
-    }
-
-    @Override
-    public Doctor getAvailableDoctor(String specialization, String dateTime) {
-        return null;
     }
 
     @Override
@@ -154,162 +148,71 @@ public class WestminsterSkinConsultationManager implements SkinConsultationManag
             return;
         }
 
-        ConsoleLog.logWithColors(ConsoleColors.CYAN_BOLD_BRIGHT, "Viewing doctors...");
-        ArrayList<Doctor> doctors = (ArrayList<Doctor>) this.getDoctors().clone();
-        doctors.sort(new DoctorNameComparator());
+        ConsoleLog.logWithColors(ConsoleColors.CYAN_BOLD_BRIGHT, "Viewing doctors sorted by last name...");
+        ArrayList<Doctor> doctors = this.getDoctors();
+        doctors.sort(new DoctorSurnameComparator());
 
         CommandLineTable ct = new CommandLineTable();
         ct.setShowVerticalLines(true);
         ct.setRightAlign(false);
-        ct.setHeaders("Medical License No.", "Name", "Surname", "Date of Birth", "Contact No.", "Specialization");
+        ct.setHeaders("Medical Licence No.", "Surname", "First Name", "Date of Birth", "Contact No.", "Specialization");
         for (Doctor d : doctors) {
-            ct.addRow(d.getMedicalLicenseNo(), d.getName(), d.getSurname(), d.getDob().toString(), d.getContactNo(), d.getSpecialization());
+            ct.addRow(d.getMedicalLicenceNo(), d.getSurname(), d.getName(), d.getDob().toString(), d.getContactNo(), d.getSpecialization());
         }
         ct.print();
     }
 
     @Override
-    public void addConsultation() {
+    public void launchGUI() {
+        GUIApplication.start(this);
+    }
+
+    @Override
+    public void addPatient(Patient patientToAdd) {
+        this.patients.add(patientToAdd);
+    }
+
+    @Override
+    public void addConsultation(Consultation consultation) {
         try {
-            ConsoleLog.logWithColors(ConsoleColors.GREEN_BOLD_BRIGHT, "Adding consultation...");
-            ConsoleLog.info("Patient Information");
-            String[] pData = this.promptPerson();
-            String dateTime = InputPrompter.promptValidatedString(
-                    String.format("Enter the date of the consultation (%s): ",
-                            "yyyy-MM-dd"), Validator.CONSULTATION_DATE);
-            String notes = InputPrompter.promptString("Enter notes (without line breaks): ");
+            consultation.getDoctor().addConsultation(consultation);
+            this.consultations.add(consultation);
 
-            ConsoleLog.info("Doctor Information");
-            String medLicense = InputPrompter.promptValidatedString("Enter the medical license of" +
-                    " the doctor: ", new Validator<String>() {
-                @Override
-                public boolean validate(String input) {
-                    if (!Validator.MEDICAL_LICENSE_NO_STRING.validate(input)) return false;
-
-                    return findDoctor(input).isPresent();
-                }
-            });
-            ConsoleLog.info("Checking availability of the doctor for the time slot...");
-
-            Doctor doctor = findDoctor(medLicense).get();
-
-            if (!this.getDoctorAvailability(doctor,
-                    LocalDate.parse(dateTime, Formats.DATE_FORMAT))) {
-                ConsoleLog.warning("Doctor you are trying to book is not available on the " +
-                        "relevant date... a different doctor will be recommended by the system.");
-                doctor = getAvailableDoctor(doctor.getSpecialization(), dateTime);
-
-                // TODO: make the program run if no doctors available for the given date??
-                //  Doesn't seem to be practical. Therefore, exiting add consultation for now.
-                if (doctor == null) {
-                    ConsoleLog.error(String.format("No doctors available on the %s. Please select" +
-                            " a different date!", dateTime));
-                    return;
-                } else {
-                    ConsoleLog.success(String.format("New doctor assigned. %s %s", doctor.getName(), doctor.getSurname()));
-                    String confirmation = InputPrompter.promptValidatedString("Do you want to " +
-                            "book consultation with the recommended doctor? (Y/N)", Validator.YES_NO_INPUT);
-
-                    switch (confirmation) {
-                        case "N":
-                            return;
-                        case "Y":
-                            break;
-                    }
-                }
-            }
-
-            Patient p = new Patient(pData[0], pData[1], pData[2], pData[3]);
-            Consultation c = new Consultation(p, doctor, dateTime, notes);
-            assert doctor != null;
-            doctor.addConsultation(c);
-            this.consultations.add(c);
-
-            ConsoleLog.logWithColors(ConsoleColors.GREEN, String.format(
-                    "New consultation added successfully! Patient UID: %s\nPlease use the patient UID to access the consultation\nApproximate consultation date time: %s",
-                    p.getUid(), c.getApproximateDateTime()
+            AlertBox.showInformationAlert(String.format(
+                "New consultation added successfully! Patient UID: %s\nPlease use the patient UID to access the consultation\nApproximate consultation date time: %s",
+                consultation.getPatient().getUID(), consultation.getConsultationDateTime().format(Formats.DATE_TIME_OUTPUT_FORMAT)
             ));
 
-        } catch (DailyConsultationsFullException e) {
-            ConsoleLog.error("Illegal operation: No more consultations allowed for the doctor being booked. Please select a different doctor");
-        } catch (NoSuchElementException e) {
-            ConsoleLog.error("There was an error capturing input");
-            e.printStackTrace();
-        }  catch (NullPointerException e) {
-            ConsoleLog.error("Unexpected error occurred. Please try again! If the issue persists " +
-                    "please inform developers");
+        } catch (IllegalConsultationException e) {
+            AlertBox.showErrorAlert(e.getLocalizedMessage());
+        } catch (Exception e) {
+            AlertBox.showErrorAlert("Unexpected error occurred. Please try again! Report an issue if error persists");
             e.printStackTrace();
         }
     }
 
     @Override
-    public void updateConsultation() {
+    public void cancelConsultation(Consultation consultation) {
+        if (consultation == null) return;
+        boolean shouldCancel = AlertBox.showConfirmationAlert(String.format("Are you sure you want to " +
+                "cancel the consultation of patient %s?", consultation.getPatient().getUID()));
 
-    }
-
-    @Override
-    public void cancelConsultation() {
-        ConsoleLog.logWithColors(ConsoleColors.RED, "Deleting consultation...");
-
-        String patientUID = InputPrompter.promptValidatedString("Please enter the patient UID: ", Validator.PATIENT_UID);
-
-        Optional<Consultation> toCancel = this.consultations.stream().filter(c -> c.getPatient().getUid().equals(patientUID)).findFirst();
-        if (!toCancel.isPresent()) {
-            ConsoleLog.error(String.format("No consultation found for the provided patient UID: %s", patientUID));
-            return;
-        }
-
-        String confirmation = InputPrompter.promptValidatedString("Are you sure you want to " +
-                "cancel the consultation? (Y/N): ", new Validator<String>() {
-            @Override
-            public boolean validate(String input) {
-                List<String> allowed = Arrays.asList("Y", "N");
-                return allowed.contains(input.toUpperCase());
-            }
-        });
-
-        switch (confirmation.toUpperCase()) {
-            case "N":
-                ConsoleLog.info(String.format("Consultation of patient %s will not be cancelled!", toCancel.get().getPatient().getUid()));
-                return;
-            case "Y":
-                ConsoleLog.success(String.format("Consultation of patient %s has been successfully cancelled!", toCancel.get().getPatient().getUid()));
-                this.consultations.remove(toCancel.get());
-                toCancel.get().getDoctor().getConsultations().remove(toCancel.get());
-                break;
+        if (!shouldCancel) {
+            AlertBox.showWarningAlert(String.format("Consultation of patient %s will not be cancelled!", consultation.getPatient().getUID()));
+        } else {
+            ConsoleLog.success(String.format("Consultation of patient %s has been successfully cancelled!", consultation.getPatient().getUID()));
+            this.consultations.remove(consultation);
+            consultation.getDoctor().getConsultations().remove(consultation);
+            // clear asset files if any available
+            consultation.clearAssets();
         }
     }
 
     @Override
-    public void viewConsultations() {
-        if (this.consultations.isEmpty()) {
-            ConsoleLog.info("No consultation recorded in the system at the moment...");
-            return;
-        }
-
-        ConsoleLog.logWithColors(ConsoleColors.CYAN_BOLD_BRIGHT, "Viewing consultations...");
-
-        CommandLineTable ct = new CommandLineTable();
-        ct.setShowVerticalLines(true);
-        ct.setRightAlign(false);
-        ct.setHeaders("Approx. Date Time", "Patient UID", "Patient Name", "Patient Contact No.",
-                "Doctor", "Specialization", "Medical License No.");
-        for (Consultation c : consultations) {
-            ct.addRow(c.getApproximateDateTime(), c.getPatient().getUid(),
-                    c.getPatient().getName() + " " + c.getPatient().getSurname(), c.getPatient().getContactNo(), "Dr." + c.getDoctor().getName() + " " + c.getDoctor().getSurname(), c.getDoctor().getSpecialization(), c.getDoctor().getMedicalLicenseNo());
-        }
-        ct.print();
-    }
-
-    public void launchGUI() {
-        Application.start(this);
-        System.out.println("GUI application started!!");
-    }
-
     public void saveToFile() {
         try (
                 FileOutputStream fileOut = new FileOutputStream("./data/consultationManager.ser");
-                ObjectOutputStream out = new ObjectOutputStream(fileOut)
+                ObjectOutputStream out = new ObjectOutputStream(fileOut);
         ) {
             out.writeObject(this);
             ConsoleLog.success("Serialized data is saved in /data/consultationManager.ser");
@@ -318,6 +221,7 @@ public class WestminsterSkinConsultationManager implements SkinConsultationManag
         }
     }
 
+    @Override
     public void loadFromFile() {
         try (
                 FileInputStream fileIn = new FileInputStream("./data/consultationManager.ser");
@@ -326,6 +230,8 @@ public class WestminsterSkinConsultationManager implements SkinConsultationManag
             WestminsterSkinConsultationManager oldState = (WestminsterSkinConsultationManager) in.readObject();
             this.doctors = oldState.doctors;
             this.consultations = oldState.consultations;
+            this.patients = oldState.patients;
+            this.consultationIdIndex = oldState.consultationIdIndex; // directly accessing the property since otherwise the index will increment
 
             ConsoleLog.success("Deserialized data loaded from /data/consultationManager.ser");
         } catch (IOException i) {
@@ -352,6 +258,19 @@ public class WestminsterSkinConsultationManager implements SkinConsultationManag
         this.consultations = consultations;
     }
 
+    public ArrayList<Patient> getPatients() {
+        return patients;
+    }
+
+    public void setPatients(ArrayList<Patient> patients) {
+        this.patients = patients;
+    }
+
+    public int getConsultationIdIndex() {
+        // auto increments upon returning
+        return consultationIdIndex++;
+    }
+
     public void start() {
         String promptMessage = "Please enter the letter of the action you want to perform: ";
         String mainMenuInput;
@@ -359,10 +278,10 @@ public class WestminsterSkinConsultationManager implements SkinConsultationManag
 
         while (!shouldQuit) {
             this.printMainMenu();
-            mainMenuInput = InputPrompter.promptValidatedString(promptMessage, new Validator<String>() {
+            mainMenuInput = InputPrompter.promptValidatedString(promptMessage, new Validator<String>("Input does not match the allowed values") {
                 @Override
                 public boolean validate(String input) {
-                    ArrayList<String> allowed = new ArrayList<>(Arrays.asList("A", "D", "V", "AC", "VC", "CC", "S", "L", "G", "Q"));
+                    ArrayList<String> allowed = new ArrayList<>(Arrays.asList("A", "D", "V", "S", "L", "G", "Q"));
                     return allowed.contains(input.toUpperCase());
                 }
             });

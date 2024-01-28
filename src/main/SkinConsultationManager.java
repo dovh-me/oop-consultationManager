@@ -1,20 +1,16 @@
 package main;
 
-import gui.models.Doctor;
-
-import java.time.LocalDate;
-import java.time.LocalDateTime;
+import models.Consultation;
+import models.Patient;
 
 public interface SkinConsultationManager {
     void addDoctor();
-    void updateDoctor();
     void removeDoctor();
-    boolean getDoctorAvailability(Doctor doctor, LocalDate ldt);
-    Doctor getAvailableDoctor(String specialization, String dateTime);
     void viewDoctors();
-
-    void addConsultation();
-    void updateConsultation();
-    void cancelConsultation();
-    void viewConsultations();
+    void addConsultation(Consultation consultation);
+    void cancelConsultation(Consultation consultation);
+    void addPatient(Patient patientToAdd);
+    void launchGUI();
+    void saveToFile();
+    void loadFromFile();
 }
