@@ -1,6 +1,6 @@
 # Skin Consultation Manager
 
-This is a project done as a coursework for the Object-Oriented Programming module. This main Objective of the project is to get familiazed with the OOP principles and application of the principles to a functioning program.
+This project was submitted as a fulfillment of the Object-Oriented Programming module. Primary Objective of this project was familiarisation and application of basic OOP principles to develop and fully functional software.
 
 The Project consists of two components,
 1. Console Interface for Admin users
@@ -31,10 +31,10 @@ Below section describes the minimum software and hardware requirements that are 
 ### Hardware Requirements
 Below are some rough estimates for the hardware requirements. Any device that is capable of running modern software (word 2010) should have no issues executing the program without any issues.
 
-- RAM: 1 GB or more
-- CPU: Dual core or more
-- Hard disk space: 100MB or more
+- RAM: >= 1 GB
+- CPU: >= Intel Dual Core
+- Hard disk space: >= 300MB Free Hard Disk
 
 ## Technology Stack
 - Java 1.8
-- JavaFx 1.8 (pre bundled JavaFX version for the JDK 1.8)
+- JavaFx 1.8 (pre bundled JavaFX in JDK 1.8)
